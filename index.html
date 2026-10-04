@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+<title>RoutineTracker</title>
+<meta name="description" content="말로 요청하면 AI 코치가 습관 루틴을 설계하고 관리해주는 습관 앱">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#171A22" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="루틴트래커">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app" id="app">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent-2)"/></linearGradient></defs></svg>
+  <main class="screens">
+    <section class="screen active" id="screen-ai" data-tab="ai" aria-label="AI">
+      <header class="ai-head">
+        <div class="orb pulse" id="headOrb"></div>
+        <div class="t"><b>🧠 RoutineTracker AI</b><span>당신의 습관을 설계하고 관리해드릴게요.</span></div>
+        <button class="icon-btn" id="resetBtn" aria-label="데이터 관리"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
+      </header>
+      <div class="chat" id="chat" aria-live="polite"></div>
+      <div class="composer">
+        <div class="chips" id="chips"></div>
+        <div class="inputrow">
+          <textarea id="input" rows="1" placeholder="원하는 루틴을 자유롭게 입력하세요..." aria-label="AI에게 메시지"></textarea>
+          <button class="send" id="sendBtn" aria-label="보내기" disabled><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+        </div>
+      </div>
+    </section>
+    <section class="screen" id="screen-today" data-tab="today" aria-label="오늘"><div class="scroll" id="today"></div></section>
+    <section class="screen" id="screen-routines" data-tab="routines" aria-label="루틴"><div class="scroll" id="routines"></div></section>
+    <section class="screen" id="screen-analytics" data-tab="analytics" aria-label="분석"><div class="scroll" id="analytics"></div></section>
+    <section class="screen" id="screen-dna" data-tab="dna" aria-label="DNA"><div class="scroll" id="dna"></div></section>
+  </main>
+  <nav class="tabbar" id="tabbar">
+    <button class="tab active" data-tab="ai"><i class="dot"></i><svg viewBox="0 0 24 24"><path d="M12 3.5l1.9 4.9 4.9 1.9-4.9 1.9L12 17.1l-1.9-4.9-4.9-1.9 4.9-1.9z"/><path d="M18.5 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>AI</button>
+    <button class="tab" data-tab="today"><i class="dot"></i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8.3 12.4l2.5 2.5 4.9-5.2"/></svg>오늘</button>
+    <button class="tab" data-tab="routines"><i class="dot"></i><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3.5"/><path d="M3.5 10h17M8.5 3v4M15.5 3v4"/></svg>루틴</button>
+    <button class="tab" data-tab="analytics"><i class="dot"></i><svg viewBox="0 0 24 24"><path d="M5 20v-7M12 20V5M19 20v-10"/></svg>분석</button>
+    <button class="tab" data-tab="dna"><i class="dot"></i><svg viewBox="0 0 24 24"><path d="M7 3c0 5 10 6.5 10 12 0 2.7-1.6 4.6-3 6M17 3c0 5-10 6.5-10 12 0 2.7 1.6 4.6 3 6"/><path d="M8.6 7h6.8M8.6 17.5h6.8"/></svg>DNA</button>
+  </nav>
+  <div class="toast" id="toast" hidden></div>
+  <div class="sheet-wrap" id="sheet" hidden><div class="sheet" id="sheetBody"></div></div>
+</div>
+<noscript><p style="padding:24px;font-family:sans-serif">RoutineTracker를 사용하려면 브라우저에서 JavaScript를 켜주세요.</p></noscript>
+<script src="core.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
