@@ -1,0 +1,2203 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+<title>RoutineTracker</title>
+<meta name="description" content="말로 요청하면 AI 코치가 습관 루틴을 설계하고 관리해주는 습관 앱">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#171A22" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="루틴트래커">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* RoutineTracker — base styles */
+/* Layout: one phone-width app column. Five screens slide inside it, a bottom tab bar switches them.
+   The AI screen is a chat log over a command composer; the other screens are scrolling card stacks. */
+:root{
+  --page:#E4E7EE; --bg:#F2F3F7; --surface:#FFFFFF; --surface-2:#F6F7FA; --line:#E2E5EC;
+  --fg:#151925; --muted:#626A7D; --faint:#9AA1B2;
+  --accent:#EE5A2B; --accent-2:#FF9F43; --accent-3:#F0568C; --accent-soft:#FDE9E1; --accent-ink:#FFFFFF;
+  --ok:#11926C; --ok-soft:#DCF2EA; --warn:#B9800F; --warn-soft:#FBF0D7; --bad:#CF3A55; --bad-soft:#FBE4E8;
+  --shadow:0 1px 2px rgba(21,25,37,.05),0 10px 30px -12px rgba(21,25,37,.14);
+  --font-ui:'IBM Plex Sans KR',-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  --font-display:'Bricolage Grotesque','IBM Plex Sans KR',-apple-system,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  --r-lg:20px; --r-md:14px; --r-sm:10px;
+  /* mixed tints, precomputed so older Safari / Samsung Internet render them */
+  --mx-accent-22-t:rgba(238,90,43,0.22); --mx-accent-22-surface-2:#F4D4CC; --mx-accent-30-surface-2:#F4C8BC; --mx-accent-35-line:#E6B4A8; --mx-accent-40-t:rgba(238,90,43,0.40); --mx-accent-45-line:#E7A695; --mx-accent-45-surface-2:#F2B09D; --mx-accent-50-line:#E8A08C; --mx-accent-55-t:rgba(238,90,43,0.55); --mx-accent-60-t:rgba(238,90,43,0.60); --mx-accent-70-surface-2:#F08969; --mx-bad-55-surface-2:#E18F9F; --mx-ok-60-t:rgba(17,146,108,0.60); --mx-ok-soft-55-surface:#ECF8F3;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --page:#08090D; --bg:#0F1117; --surface:#171A22; --surface-2:#1D212B; --line:#282D39;
+  --fg:#ECEEF4; --muted:#979EB0; --faint:#626A7D;
+  --accent:#FF6A3B; --accent-2:#FFAE57; --accent-3:#FF6E9D; --accent-soft:#3A2017; --accent-ink:#FFFFFF;
+  --ok:#3DCB9C; --ok-soft:#123328; --warn:#E8B04A; --warn-soft:#352A12; --bad:#FF6F86; --bad-soft:#3A1822;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -12px rgba(0,0,0,.6); --mx-accent-22-t:rgba(255,106,59,0.22); --mx-accent-22-surface-2:#4F312F; --mx-accent-30-surface-2:#613730; --mx-accent-35-line:#73423A; --mx-accent-40-t:rgba(255,106,59,0.40); --mx-accent-45-line:#89483A; --mx-accent-45-surface-2:#834232; --mx-accent-50-line:#944C3A; --mx-accent-55-t:rgba(255,106,59,0.55); --mx-accent-60-t:rgba(255,106,59,0.60); --mx-accent-70-surface-2:#BB5436; --mx-bad-55-surface-2:#994C5D; --mx-ok-60-t:rgba(61,203,156,0.60); --mx-ok-soft-55-surface:#142825; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --page:#08090D; --bg:#0F1117; --surface:#171A22; --surface-2:#1D212B; --line:#282D39;
+  --fg:#ECEEF4; --muted:#979EB0; --faint:#626A7D;
+  --accent:#FF6A3B; --accent-2:#FFAE57; --accent-3:#FF6E9D; --accent-soft:#3A2017; --accent-ink:#FFFFFF;
+  --ok:#3DCB9C; --ok-soft:#123328; --warn:#E8B04A; --warn-soft:#352A12; --bad:#FF6F86; --bad-soft:#3A1822;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -12px rgba(0,0,0,.6); --mx-accent-22-t:rgba(255,106,59,0.22); --mx-accent-22-surface-2:#4F312F; --mx-accent-30-surface-2:#613730; --mx-accent-35-line:#73423A; --mx-accent-40-t:rgba(255,106,59,0.40); --mx-accent-45-line:#89483A; --mx-accent-45-surface-2:#834232; --mx-accent-50-line:#944C3A; --mx-accent-55-t:rgba(255,106,59,0.55); --mx-accent-60-t:rgba(255,106,59,0.60); --mx-accent-70-surface-2:#BB5436; --mx-bad-55-surface-2:#994C5D; --mx-ok-60-t:rgba(61,203,156,0.60); --mx-ok-soft-55-surface:#142825; color-scheme:dark;}
+
+html,body{height:100%}
+body{background:var(--page);color:var(--fg);font-family:var(--font-ui);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow:hidden}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;-webkit-tap-highlight-color:transparent}
+button:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{position:relative;height:100%;max-width:460px;margin:0 auto;display:flex;flex-direction:column;background:var(--bg);overflow:hidden}
+@media (min-width:520px){.app{border-left:1px solid var(--line);border-right:1px solid var(--line)}}
+.screens{position:relative;flex:1;min-height:0}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateX(18px);transition:opacity .28s ease,transform .32s cubic-bezier(.2,.8,.2,1),visibility 0s linear .32s}
+.screen.left{transform:translateX(-18px)}
+.screen.active{opacity:1;visibility:visible;transform:none;transition:opacity .28s ease,transform .32s cubic-bezier(.2,.8,.2,1),visibility 0s}
+.scroll > *{flex-shrink:0}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px 16px 28px;display:flex;flex-direction:column;gap:14px;overscroll-behavior:contain}
+
+/* type */
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;color:var(--muted)}
+.h1{font-family:var(--font-display);font-weight:800;font-size:28px;line-height:1.15;letter-spacing:-.01em;text-wrap:balance;margin:2px 0 0}
+.h2{font-weight:700;font-size:16px;margin:0}
+.muted{color:var(--muted)}
+.num{font-family:var(--font-display);font-variant-numeric:tabular-nums;font-weight:700}
+.mono{font-family:var(--font-mono);font-size:12px}
+
+.card{background:var(--surface);border-radius:var(--r-lg);padding:16px;box-shadow:var(--shadow);border:1px solid var(--line)}
+.card-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.pill.accent{background:var(--accent-soft);color:var(--accent)}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 16px;border-radius:999px;font-weight:600;font-size:14px;background:var(--surface-2);border:1px solid var(--line);transition:transform .12s ease,background .2s}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.btn.danger{background:var(--bad);color:#fff;border-color:transparent}
+.btn.ghost{background:transparent}
+.btn[disabled]{opacity:.45;pointer-events:none}
+
+/* staggered entry for cards when a tab opens; resting state is fully visible */
+.enter > *{animation:rise .5s cubic-bezier(.2,.8,.2,1) both}
+.enter > *:nth-child(2){animation-delay:.05s}.enter > *:nth-child(3){animation-delay:.1s}.enter > *:nth-child(4){animation-delay:.15s}.enter > *:nth-child(5){animation-delay:.2s}.enter > *:nth-child(n+6){animation-delay:.25s}
+@keyframes rise{from{transform:translateY(10px);opacity:.4}to{transform:none;opacity:1}}
+.flash{animation:flash 2.4s ease-out 1}
+@keyframes flash{0%{box-shadow:0 0 0 0 var(--accent),var(--shadow)}12%{box-shadow:0 0 0 3px var(--accent),0 0 28px 2px var(--mx-accent-40-t)}100%{box-shadow:0 0 0 0 transparent,var(--shadow)}}
+.kpis.flash,.bar.flash{border-radius:12px}
+.newtag{font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--accent-ink);background:var(--accent);padding:2px 6px;border-radius:6px}
+
+/* ---------- tab bar ---------- */
+.tabbar{position:relative;display:grid;grid-template-columns:repeat(5,1fr);background:var(--surface);border-top:1px solid var(--line);padding:4px 6px 6px;overflow:hidden}
+.tab{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:54px;justify-content:center;font-size:11px;font-weight:600;color:var(--faint);border-radius:12px;transition:color .2s}
+.tab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.tab.active{color:var(--fg)}
+.tab.active svg{transform:translateY(-1px) scale(1.06)}
+.tab.active::before{content:"";position:absolute;top:2px;width:22px;height:3px;border-radius:3px;background:var(--accent)}
+.tab .dot{position:absolute;top:9px;left:calc(50% + 9px);width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--surface);transform:scale(0);transition:transform .3s cubic-bezier(.3,1.6,.5,1)}
+.tab.badge .dot{transform:scale(1)}
+.tabbar.sync::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,var(--mx-accent-22-t),transparent);transform:translateX(-100%);animation:sweep 1s ease-out 1}
+@keyframes sweep{to{transform:translateX(100%)}}
+
+/* ---------- AI screen ---------- */
+.ai-head{display:flex;align-items:center;gap:12px;padding:14px 16px 12px;border-bottom:1px solid var(--line);background:var(--surface)}
+.ai-head .t{flex:1;min-width:0}
+.ai-head .t b{display:block;font-size:17px;font-weight:700;letter-spacing:-.01em}
+.ai-head .t span{font-size:12.5px;color:var(--muted)}
+.icon-btn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:var(--muted);background:var(--surface-2)}
+.icon-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.orb{position:relative;width:38px;height:38px;flex:none;border-radius:50%;background:conic-gradient(from 210deg,var(--accent),var(--accent-2),var(--accent-3),var(--accent));box-shadow:0 0 18px -2px var(--mx-accent-60-t)}
+.orb::after{content:"";position:absolute;inset:5px;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.95),rgba(255,255,255,.25) 45%,transparent 70%)}
+.orb.sm{width:28px;height:28px}
+.orb.live{animation:spin 2.2s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.orb.pulse{animation:breathe 3.6s ease-in-out infinite}
+@keyframes breathe{50%{box-shadow:0 0 26px 2px var(--mx-accent-55-t)}}
+
+.chat{flex:1;overflow-y:auto;padding:16px 16px 8px;display:flex;flex-direction:column;gap:14px;overscroll-behavior:contain}
+.msg{display:flex;gap:10px;align-items:flex-start;animation:msgIn .35s cubic-bezier(.2,.8,.2,1)}
+.msg.static{animation:none}
+@keyframes msgIn{from{transform:translateY(8px);opacity:0}}
+.msg.user{justify-content:flex-end}
+.msg .body{min-width:0;flex:1;display:flex;flex-direction:column;gap:8px}
+.msg.user .bubble{max-width:82%;background:var(--fg);color:var(--bg);border-radius:18px 18px 4px 18px;padding:10px 14px;white-space:pre-wrap;word-break:break-word}
+.msg.ai .bubble{background:var(--surface);border:1px solid var(--line);border-radius:4px 18px 18px 18px;padding:12px 14px;box-shadow:var(--shadow);word-break:break-word}
+.msg.ai .bubble b{font-weight:700}
+.msg.sys{justify-content:center}
+.msg.sys .bubble{font-size:12.5px;color:var(--muted);background:var(--surface-2);border-radius:999px;padding:5px 12px}
+.tagline{display:inline-flex;align-self:flex-start;align-items:center;gap:6px;font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:3px 10px}
+.thinking .steps{display:flex;flex-direction:column;gap:6px;padding:10px 14px;background:var(--surface);border:1px dashed var(--mx-accent-45-line);border-radius:4px 18px 18px 18px}
+.step{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);animation:msgIn .3s ease}
+.step.cur{color:var(--fg);font-weight:600}
+.step.cur .shimmer{background:linear-gradient(90deg,var(--fg) 30%,var(--accent) 50%,var(--fg) 70%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shim 1.2s linear infinite}
+@keyframes shim{from{background-position:100% 0}to{background-position:-100% 0}}
+.step .ck{color:var(--ok);font-weight:700}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px}
+.optlist{display:grid;gap:8px}
+.optlist .btn{justify-content:flex-start;border-radius:14px;background:var(--surface)}
+
+.mini{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;box-shadow:var(--shadow)}
+.mini h4{margin:0 0 8px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px}
+.changes li{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;padding:5px 0;border-top:1px solid var(--line);animation:msgIn .35s both}
+.changes li:first-child{border-top:0}
+.changes ul{list-style:none;margin:0;padding:0}
+.chg-ic{flex:none;width:20px;height:20px;border-radius:6px;display:grid;place-items:center;font-size:12px;font-weight:700}
+.chg-ic.add{background:var(--ok-soft);color:var(--ok)}.chg-ic.update{background:var(--accent-soft);color:var(--accent)}.chg-ic.remove{background:var(--bad-soft);color:var(--bad)}.chg-ic.log{background:var(--surface-2);color:var(--muted)}
+.jump{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.jump button{font-size:12.5px;font-weight:600;color:var(--accent);padding:6px 10px;border-radius:999px;background:var(--accent-soft);min-height:32px}
+.plan-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.pday{border-radius:10px;background:var(--surface-2);padding:7px 3px 6px;text-align:center;animation:pop .45s cubic-bezier(.3,1.5,.5,1) both}
+.pday b{display:block;font-family:var(--font-display);font-size:13px}
+.pday span{display:block;font-size:10px;color:var(--muted);line-height:1.25;margin-top:2px;word-break:keep-all}
+@keyframes pop{from{transform:scale(.6);opacity:0}}
+.statgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.stat{background:var(--surface-2);border-radius:12px;padding:10px 12px}
+.stat .k{font-size:11.5px;color:var(--muted)}
+.stat .v{font-family:var(--font-display);font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat .v small{font-size:13px;font-weight:600;color:var(--muted)}
+details.nlu{font-size:12px;color:var(--faint)}
+details.nlu summary{cursor:pointer;list-style:none;display:inline-flex;gap:6px;align-items:center;padding:2px 0}
+details.nlu summary::-webkit-details-marker{display:none}
+details.nlu pre{margin:6px 0 0;padding:10px;border-radius:10px;background:var(--surface-2);color:var(--muted);font-family:var(--font-mono);font-size:11px;line-height:1.5;overflow-x:auto;max-height:240px}
+
+.composer{background:var(--surface);border-top:1px solid var(--line);padding:10px 16px 12px;display:flex;flex-direction:column;gap:10px}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;font-size:13px;font-weight:500;padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2);min-height:36px;white-space:nowrap;transition:transform .12s,border-color .2s}
+.chip:active{transform:scale(.96)}
+@media (hover:hover){.chip:hover{border-color:var(--mx-accent-50-line)}}
+.inputrow{display:flex;gap:8px;align-items:flex-end;background:var(--surface-2);border:1.5px solid var(--line);border-radius:22px;padding:6px 6px 6px 14px;transition:border-color .2s,box-shadow .2s}
+.inputrow:focus-within{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+#input{flex:1;resize:none;border:0;outline:none;background:transparent;font:inherit;font-size:16px;color:var(--fg);max-height:120px;min-height:40px;padding:8px 0;line-height:1.45}
+#input::placeholder{color:var(--faint)}
+.send{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink);transition:transform .15s,opacity .2s}
+.send svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.send:disabled{opacity:.35}
+.send:active{transform:scale(.92)}
+
+/* ---------- today ---------- */
+.hero{display:flex;gap:16px;align-items:center}
+.ring{position:relative;width:104px;height:104px;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:10;stroke-linecap:round}
+.ring .bgc{stroke:var(--surface-2)}
+.ring .fgc{stroke:url(#ringGrad);transition:stroke-dashoffset 1s cubic-bezier(.2,.8,.2,1)}
+.ring .lbl{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.ring .lbl b{font-family:var(--font-display);font-size:26px;line-height:1;font-variant-numeric:tabular-nums}
+.ring .lbl span{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+.hero .meta{min-width:0;display:flex;flex-direction:column;gap:6px}
+.goal{font-size:13.5px;color:var(--muted)}
+.goal b{color:var(--fg);font-weight:600}
+.brief{display:flex;gap:12px;align-items:flex-start}
+.brief p{margin:0;font-size:14px}
+.rlist{display:flex;flex-direction:column;gap:10px}
+.ritem{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px;box-shadow:var(--shadow);transition:background .3s,opacity .3s}
+.ritem.done{background:var(--mx-ok-soft-55-surface)}
+.ritem.fail{opacity:.75}
+.hic{flex:none;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:20px}
+.ritem .info{flex:1;min-width:0}
+.ritem .info b{display:block;font-size:15px;font-weight:600;line-height:1.3}
+.ritem.done .info b{text-decoration:line-through;text-decoration-color:var(--mx-ok-60-t)}
+.ritem .info span{font-size:12.5px;color:var(--muted)}
+.ract{display:flex;gap:6px;flex:none}
+.rb{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;border:1.5px solid var(--line);background:var(--surface-2);font-size:18px;transition:transform .15s}
+.rb:active{transform:scale(.9)}
+.rb.ok{color:var(--ok)}.rb.no{color:var(--bad)}
+.status{font-size:12px;font-weight:700;padding:6px 10px;border-radius:999px;cursor:pointer}
+.status.done{background:var(--ok-soft);color:var(--ok)}.status.fail{background:var(--bad-soft);color:var(--bad)}
+.ritem.justdone .hic{animation:boing .6s cubic-bezier(.3,1.7,.5,1)}
+@keyframes boing{30%{transform:scale(1.25) rotate(-6deg)}}
+.burst{position:fixed;pointer-events:none;z-index:50;width:8px;height:8px;border-radius:2px;animation:burst .8s cubic-bezier(.15,.7,.3,1) forwards}
+@keyframes burst{to{transform:translate(var(--dx),var(--dy)) rotate(var(--rot));opacity:0}}
+.empty{text-align:center;padding:28px 16px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.empty p{margin:0;color:var(--muted);font-size:14px}
+
+/* ---------- routines ---------- */
+.hcard{display:flex;flex-direction:column;gap:12px}
+.hhead{display:flex;gap:12px;align-items:center}
+.hhead .info{flex:1;min-width:0}
+.hhead b{font-size:17px}
+.hhead .sub{font-size:12.5px;color:var(--muted)}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.wd{text-align:center;font-size:11.5px;font-weight:600;border-radius:9px;padding:6px 0;background:var(--surface-2);color:var(--faint)}
+.wd.on{color:#fff}
+.wd.today{outline:2px solid var(--fg);outline-offset:1px}
+.rline{display:flex;align-items:center;gap:10px;font-size:14px;padding:8px 0;border-top:1px solid var(--line)}
+.rline .tm{font-family:var(--font-mono);font-size:12.5px;color:var(--muted);width:46px;flex:none}
+.rline .tt{flex:1;min-width:0}
+.plan{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:2px 16px 4px}
+.plan::-webkit-scrollbar{display:none}
+.pl{flex:none;width:96px;border-radius:12px;padding:8px 10px;background:var(--surface-2);border:1.5px solid transparent}
+.pl.cur{border-color:var(--accent);background:var(--accent-soft)}
+.pl.past{opacity:.55}
+.pl small{font-size:10.5px;font-weight:700;letter-spacing:.05em;color:var(--muted)}
+.pl p{margin:2px 0 0;font-size:12px;line-height:1.35;word-break:keep-all}
+.linkbtn{align-self:flex-start;font-size:13px;font-weight:600;color:var(--accent);min-height:36px;display:inline-flex;align-items:center;gap:4px}
+
+/* ---------- analytics ---------- */
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px;box-shadow:var(--shadow)}
+.kpi .k{font-size:11.5px;color:var(--muted)}
+.kpi .v{font-family:var(--font-display);font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi .v small{font-size:13px;color:var(--muted);font-weight:600}
+.bars{display:flex;flex-direction:column;gap:10px}
+.bar{display:grid;grid-template-columns:96px minmax(0,1fr) 44px;gap:10px;align-items:center;font-size:13.5px}
+.bar .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track{height:10px;border-radius:6px;background:var(--surface-2);overflow:hidden}
+.fill{height:100%;border-radius:6px;width:0;transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.bar .val{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.plus{display:inline-block;margin-left:6px;font-size:11px;font-weight:700;color:var(--bad);animation:plus 2.4s ease-out both}
+@keyframes plus{0%{transform:translateY(6px) scale(.6);opacity:0}15%{transform:none;opacity:1}}
+.cols{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;align-items:end;height:130px}
+.cols.c4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.col{display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+.col .cv{font-size:11px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+.col .cb{width:100%;max-width:34px;border-radius:8px 8px 4px 4px;background:var(--mx-accent-30-surface-2);height:0;transition:height .9s cubic-bezier(.2,.8,.2,1)}
+.col.hi .cb{background:var(--accent)}
+.col.lo .cb{background:var(--mx-bad-55-surface-2)}
+.col .cl{font-size:12px;font-weight:600}
+.col .cl small{display:block;font-size:10px;color:var(--faint);font-weight:500;text-align:center}
+.report{border:1.5px solid var(--mx-accent-35-line)}
+.report ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.report .insight{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--accent-soft);font-size:14px}
+
+/* ---------- DNA ---------- */
+.dna-hero{position:relative;overflow:hidden;padding:0}
+.dna-hero canvas{display:block;width:100%;height:170px}
+.dna-hero .cap{padding:14px 16px 16px;display:flex;flex-direction:column;gap:4px}
+.persona{font-family:var(--font-display);font-size:24px;font-weight:800;letter-spacing:-.01em}
+.traits{display:flex;flex-direction:column;gap:12px}
+.trait .row{display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:5px}
+.trait .row b{font-weight:600}
+.trait .track{height:8px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:0}
+.notes{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;font-size:14px}
+.notes li{display:flex;gap:8px}
+.exp{display:flex;flex-direction:column;gap:6px;padding:10px 0;border-top:1px solid var(--line)}
+.exp:first-of-type{border-top:0;padding-top:0}
+.exp .track{height:6px}
+
+/* ---------- overlays ---------- */
+.toast{position:absolute;left:16px;right:16px;top:12px;z-index:40;display:flex;align-items:center;gap:10px;background:var(--fg);color:var(--bg);border-radius:14px;padding:10px 12px 10px 14px;font-size:13.5px;box-shadow:0 12px 30px -10px rgba(0,0,0,.4);animation:toastIn .35s cubic-bezier(.2,.8,.2,1)}
+.toast span{flex:1}
+.toast button{font-weight:700;color:var(--accent-2);min-height:32px;padding:0 6px}
+@keyframes toastIn{from{transform:translateY(-16px);opacity:0}}
+.sheet-wrap{position:absolute;inset:0;z-index:45;background:rgba(10,12,18,.42);display:flex;align-items:flex-end;animation:fade .2s}
+@keyframes fade{from{opacity:0}}
+.sheet{width:100%;background:var(--surface);border-radius:22px 22px 0 0;padding:10px 16px 20px;display:flex;flex-direction:column;gap:12px;animation:up .32s cubic-bezier(.2,.8,.2,1)}
+@keyframes up{from{transform:translateY(100%)}}
+.grab{width:40px;height:4px;border-radius:2px;background:var(--line);align-self:center}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cal .dh{font-size:11px;font-weight:700;color:var(--faint);text-align:center;padding-bottom:2px}
+.cell{aspect-ratio:1;max-width:100%;border-radius:8px;display:flex;align-items:flex-start;justify-content:flex-end;padding:3px 5px;font-size:10.5px;font-weight:600;color:var(--muted);background:var(--surface-2);border:1.5px solid transparent;font-variant-numeric:tabular-nums}
+.cell.l1{background:var(--mx-accent-22-surface-2)}.cell.l2{background:var(--mx-accent-45-surface-2)}
+.cell.l3{background:var(--mx-accent-70-surface-2);color:#fff}.cell.l4{background:var(--accent);color:#fff}
+.cell.miss{background:var(--surface);border:1.5px dashed var(--bad);color:var(--bad)}.cell.fut{opacity:.4}.cell.blank{background:transparent}
+.cell.today{border-color:var(--fg)}.cell.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.calnav{display:flex;align-items:center;gap:6px}
+.calnav button{width:34px;height:34px;border-radius:10px;background:var(--surface-2);font-size:15px}
+.calfil{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -16px 10px;padding:0 16px}
+.calfil::-webkit-scrollbar{display:none}
+.calfil button{flex:none;font-size:12.5px;font-weight:600;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2);min-height:32px}
+.calfil button.on{background:var(--fg);color:var(--bg);border-color:transparent}
+.legend2{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--faint);margin-top:8px}
+.legend2 i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.dayd{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:13.5px;display:flex;flex-direction:column;gap:6px}
+.hact{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.hact .btn{min-height:36px;padding:0 12px;font-size:13px}
+.hact .linkbtn{margin-left:auto}
+.tabhead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.btn.sm{min-height:40px;padding:0 14px;font-size:13.5px}
+.form{display:flex;flex-direction:column;gap:14px}
+.fl{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--muted)}
+.fl input{font:inherit;font-size:16px;color:var(--fg);background:var(--surface-2);border:1.5px solid var(--line);border-radius:12px;min-height:46px;padding:0 12px;width:100%}
+.fl input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.icons{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px}
+.ico,.dy{min-height:40px;border-radius:10px;background:var(--surface-2);border:1.5px solid var(--line);font-size:18px}
+.dy{font-size:13px;font-weight:700;color:var(--muted)}
+.ico.on{border-color:var(--accent);background:var(--accent-soft)}
+.dy.on{background:var(--accent);border-color:transparent;color:var(--accent-ink)}
+.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.ferr{margin:0;font-size:13px;color:var(--bad);font-weight:600}
+.sheet{max-height:88%;overflow-y:auto}
+.sheet textarea{font-family:var(--font-mono);font-size:16px;width:100%;min-height:140px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface-2);color:var(--fg);padding:10px;resize:vertical}
+.sep{height:1px;background:var(--line);margin:2px 0}
+.reasons{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.reasons .btn{border-radius:14px;justify-content:flex-start}
+
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+/* =====================================================================
+   Mobile / PWA layer — overrides the base styles above.
+   Targets: Android Chrome, Samsung Internet, iPhone Safari (browser + home-screen app)
+   ===================================================================== */
+
+/* --- page shell: no default margins, no page scroll, no pull-to-refresh bounce --- */
+*,*::before,*::after{box-sizing:border-box}
+html,body{width:100%;height:100%;min-height:100%;margin:0;padding:0;overflow:hidden;overscroll-behavior:none}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+img,canvas,svg{max-width:100%}
+
+/* --- app column: always the visible screen height ---
+   100vh → 100dvh (browsers that know dvh) → --app-h (exact visible height from JS, shrinks with the keyboard) */
+.app{position:fixed;top:0;left:0;right:0;margin:0 auto;width:100%;height:100vh;height:100dvh;
+  padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.app.vv{height:var(--app-h,100dvh)}
+
+/* --- notch / Dynamic Island / home indicator --- */
+.ai-head{padding-top:calc(14px + env(safe-area-inset-top,0px))}
+.scroll{padding-top:calc(18px + env(safe-area-inset-top,0px))}
+.tabbar{padding-bottom:calc(6px + env(safe-area-inset-bottom,0px))}
+.toast{top:calc(12px + env(safe-area-inset-top,0px))}
+.sheet{padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));max-height:calc(100% - 16px - env(safe-area-inset-top,0px));-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+
+/* --- keyboard open: hide the tab bar so the input sits directly on the keyboard --- */
+.kb-open .tabbar{display:none}
+.kb-open .sheet{padding-bottom:16px}
+.kb-open .chat{padding-bottom:4px}
+
+/* --- touch: no text selection / callout / grey flash on controls, no double-tap zoom delay --- */
+button,label.btn,.tab,.chip,.cell,.rb,[data-act]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+button,input,textarea{-webkit-appearance:none;appearance:none}
+button{cursor:pointer}
+.chat,.scroll,.chips,.plan,.calfil,.sheet{-webkit-overflow-scrolling:touch}
+/* native time/number inputs on iOS ignore width and centre their text */
+.fl input{min-width:0;max-width:100%;display:block}
+.fl input::-webkit-date-and-time-value{text-align:left;min-height:1.2em}
+input[type=number]{-moz-appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+
+/* --- finger-sized targets (≈44px) on touch screens --- */
+@media (pointer:coarse){
+  .chip{min-height:44px}
+  .jump button{min-height:44px;padding:0 14px}
+  .calnav button{width:44px;height:44px}
+  .calfil button{min-height:40px;padding:0 12px}
+  .toast button{min-height:44px;padding:0 12px}
+  .status{min-height:40px;display:inline-flex;align-items:center}
+  .linkbtn,.btn.sm,.hact .btn{min-height:44px}
+  .icon-btn{width:44px;height:44px}
+  .ico,.dy{min-height:44px}
+  details.nlu summary{min-height:36px}
+}
+
+/* --- smooth animations: only transform / opacity per frame --- */
+.screen{will-change:transform,opacity;backface-visibility:hidden;-webkit-backface-visibility:hidden;contain:layout paint}
+.fill{transform-origin:left center;transition:transform .9s cubic-bezier(.2,.8,.2,1)}
+.col .cb{transform-origin:bottom center;transition:transform .9s cubic-bezier(.2,.8,.2,1)}
+/* highlight ring: fade a pseudo-element instead of animating box-shadow */
+.flash{animation:none;position:relative}
+.flash::after{content:"";position:absolute;inset:-1px;border-radius:inherit;pointer-events:none;
+  box-shadow:0 0 0 3px var(--accent),0 0 26px 2px var(--mx-accent-40-t);opacity:0;animation:flashFade 2.4s ease-out 1}
+@keyframes flashFade{12%{opacity:1}100%{opacity:0}}
+/* breathing orb: animate opacity of a glow layer, not box-shadow */
+.orb.pulse{animation:none}
+.orb.pulse::before{content:"";position:absolute;inset:-4px;border-radius:50%;box-shadow:0 0 22px 4px var(--mx-accent-55-t);opacity:.25;animation:glow 3.6s ease-in-out infinite;pointer-events:none}
+@keyframes glow{50%{opacity:1}}
+
+/* --- small phones (320–359px) --- */
+@media (max-width:359px){
+  .scroll{padding-left:12px;padding-right:12px}
+  .h1{font-size:25px}
+  .kpis{gap:6px}.kpi{padding:10px}.kpi .v{font-size:22px}
+  .hero{gap:12px}.ring{width:92px;height:92px}.ring .lbl b{font-size:22px}
+  .bar{grid-template-columns:78px minmax(0,1fr) 40px;gap:8px}
+  .icons{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .reasons{grid-template-columns:1fr}
+  .tab{font-size:10.5px}
+  .ai-head{gap:10px;padding-left:12px;padding-right:12px}
+  .composer{padding-left:12px;padding-right:12px}.chips{margin:0 -12px;padding:0 12px}
+  .chat{padding-left:12px;padding-right:12px}
+}
+
+/* --- landscape phones: compact chrome so the chat keeps room --- */
+@media (orientation:landscape) and (max-height:520px){
+  .app{max-width:760px}
+  .ai-head{padding-top:calc(6px + env(safe-area-inset-top,0px));padding-bottom:6px}
+  .ai-head .t span{display:none}
+  .ai-head .orb{width:30px;height:30px}
+  .tab{min-height:44px;flex-direction:row;gap:6px;font-size:12px}
+  .tab.active::before{top:0}
+  .tab .dot{top:6px}
+  .composer{padding-top:6px;padding-bottom:6px;gap:6px}
+  .chat{padding-top:8px;gap:10px}
+  .scroll{padding-top:calc(10px + env(safe-area-inset-top,0px))}
+  .sheet{max-height:calc(100% - 8px)}
+  .dna-hero canvas{height:120px}
+}
+.steps-list{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;font-size:14.5px}
+
+/* hidden tabs sit 18px to the side for the slide transition; clip them so focusing an input
+   can never scroll the whole app sideways (overflow:clip can't be scrolled programmatically) */
+.app,.screens{overflow:hidden;overflow:clip}
+@media (max-width:400px){.icons{grid-template-columns:repeat(6,minmax(0,1fr))}.days{gap:4px}}
+@media (orientation:landscape) and (max-height:520px){.kb-open .chips{display:none}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent-2)"/></linearGradient></defs></svg>
+  <main class="screens">
+    <section class="screen active" id="screen-ai" data-tab="ai" aria-label="AI">
+      <header class="ai-head">
+        <div class="orb pulse" id="headOrb"></div>
+        <div class="t"><b>🧠 RoutineTracker AI</b><span>당신의 습관을 설계하고 관리해드릴게요.</span></div>
+        <button class="icon-btn" id="resetBtn" aria-label="데이터 관리"><svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
+      </header>
+      <div class="chat" id="chat" aria-live="polite"></div>
+      <div class="composer">
+        <div class="chips" id="chips"></div>
+        <div class="inputrow">
+          <textarea id="input" rows="1" placeholder="원하는 루틴을 자유롭게 입력하세요..." aria-label="AI에게 메시지"></textarea>
+          <button class="send" id="sendBtn" aria-label="보내기" disabled><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+        </div>
+      </div>
+    </section>
+    <section class="screen" id="screen-today" data-tab="today" aria-label="오늘"><div class="scroll" id="today"></div></section>
+    <section class="screen" id="screen-routines" data-tab="routines" aria-label="루틴"><div class="scroll" id="routines"></div></section>
+    <section class="screen" id="screen-analytics" data-tab="analytics" aria-label="분석"><div class="scroll" id="analytics"></div></section>
+    <section class="screen" id="screen-dna" data-tab="dna" aria-label="DNA"><div class="scroll" id="dna"></div></section>
+  </main>
+  <nav class="tabbar" id="tabbar">
+    <button class="tab active" data-tab="ai"><i class="dot"></i><svg viewBox="0 0 24 24"><path d="M12 3.5l1.9 4.9 4.9 1.9-4.9 1.9L12 17.1l-1.9-4.9-4.9-1.9 4.9-1.9z"/><path d="M18.5 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>AI</button>
+    <button class="tab" data-tab="today"><i class="dot"></i><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8.3 12.4l2.5 2.5 4.9-5.2"/></svg>오늘</button>
+    <button class="tab" data-tab="routines"><i class="dot"></i><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3.5"/><path d="M3.5 10h17M8.5 3v4M15.5 3v4"/></svg>루틴</button>
+    <button class="tab" data-tab="analytics"><i class="dot"></i><svg viewBox="0 0 24 24"><path d="M5 20v-7M12 20V5M19 20v-10"/></svg>분석</button>
+    <button class="tab" data-tab="dna"><i class="dot"></i><svg viewBox="0 0 24 24"><path d="M7 3c0 5 10 6.5 10 12 0 2.7-1.6 4.6-3 6M17 3c0 5-10 6.5-10 12 0 2.7 1.6 4.6 3 6"/><path d="M8.6 7h6.8M8.6 17.5h6.8"/></svg>DNA</button>
+  </nav>
+  <div class="toast" id="toast" hidden></div>
+  <div class="sheet-wrap" id="sheet" hidden><div class="sheet" id="sheetBody"></div></div>
+</div>
+<noscript><p style="padding:24px;font-family:sans-serif">RoutineTracker를 사용하려면 브라우저에서 JavaScript를 켜주세요.</p></noscript>
+<script>
+/*CORE-START*/
+/* =====================================================================
+   RoutineTracker core — DOM-free. Mock AI, Action Handler, central state.
+   Real AI can replace MockAI as long as it returns the same response shape:
+   { message, actions:[{type,...}], ui:{steps,cards,buttons,suggestions,focus} }
+   ===================================================================== */
+const RT=(function(){
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const addDays=(d,n)=>{const x=new Date(d.getTime());x.setDate(x.getDate()+n);return x;};
+const parseYmd=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d,12);};
+const DAY_CODES=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+const WEEK=['MON','TUE','WED','THU','FRI','SAT','SUN'];
+const DAY_KO={MON:'월',TUE:'화',WED:'수',THU:'목',FRI:'금',SAT:'토',SUN:'일'};
+const KO_DAY={월:'MON',화:'TUE',수:'WED',목:'THU',금:'FRI',토:'SAT',일:'SUN'};
+const dayOf=s=>DAY_CODES[parseYmd(s).getDay()];
+let seq=0;const uid=p=>p+'_'+Date.now().toString(36)+(seq++).toString(36);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const DIFF_KO={beginner:'초급',intermediate:'중급',advanced:'고급'};
+const LEVELS=['beginner','intermediate','advanced'];
+const toMin=t=>{const[h,m]=t.split(':').map(Number);return h*60+m;};
+const fromMin=m=>{m=((m%1440)+1440)%1440;return pad(Math.floor(m/60))+':'+pad(m%60);};
+function fmtTime(t){if(!t)return '';const[h,m]=t.split(':').map(Number);const p=h<12?'오전':'오후';let hh=h%12;if(hh===0)hh=12;return `${p} ${hh}시${m?' '+m+'분':''}`;}
+function fmtDays(days){if(!days||days.length===7)return '매일';const s=WEEK.filter(d=>days.includes(d)).join();if(s==='MON,TUE,WED,THU,FRI')return '평일';if(s==='SAT,SUN')return '주말';return WEEK.filter(d=>days.includes(d)).map(d=>DAY_KO[d]).join('·');}
+function josa(w,pair){
+  const c=w.charCodeAt(w.length-1);let jong=-1;
+  if(c>=0xAC00&&c<=0xD7A3)jong=(c-0xAC00)%28;
+  else if(/[0-9]$/.test(w)){jong={0:21,1:8,2:0,3:16,4:0,5:0,6:1,7:8,8:8,9:0}[w.slice(-1)];}
+  if(pair==='으로/로')return w+(jong<=0||jong===8?'로':'으로');
+  const[a,b]=pair.split('/');return w+(jong>0?a:b);
+}
+const BUCKETS=['아침','낮','저녁','밤'];
+const bucketOf=t=>{const h=+t.split(':')[0];return h>=5&&h<11?'아침':h>=11&&h<17?'낮':h>=17&&h<21?'저녁':'밤';};
+
+/* ---------- Mock data: habit catalogue ---------- */
+const defTitle=(d,a)=>`${d}분 ${a}`;
+const HABIT_DB={
+  exercise:{key:'exercise',name:'운동',icon:'🏃',category:'health',color:'#EF5B2F',unit:'min',time:'20:00',
+    levels:{beginner:10,intermediate:30,advanced:45},levelActivity:{beginner:'걷기',intermediate:'홈트레이닝',advanced:'근력 운동'},
+    activities:[[/달리|러닝|조깅|뛰/,'가볍게 달리기'],[/요가/,'요가'],[/스트레칭/,'스트레칭'],[/홈트|스쿼트|푸시업|팔굽|플랭크/,'홈트레이닝'],[/근력|웨이트|헬스/,'근력 운동'],[/산책/,'산책'],[/자전거/,'자전거 타기'],[/수영/,'수영'],[/계단|등산/,'계단 오르기'],[/걷기|걷고|걸을|걸어/,'걷기']],
+    boosters:{2:'+ 스트레칭 3분',4:'+ 스쿼트 10회',6:'+ 스쿼트 15회'},
+    goal:{beginner:'부담 없이 몸을 움직이는 습관 만들기',intermediate:'체력을 꾸준히 끌어올리기',advanced:'근력과 지구력 함께 키우기'},
+    tip:['처음 7일은 강도보다 "같은 시간에 신발을 신는 것"이 목표예요.','운동복을 미리 꺼내두면 시작 장벽이 확 낮아져요.','정해진 시간이 끝나도 더 하고 싶다면 그날은 보너스로 기록할게요.']},
+  reading:{key:'reading',name:'독서',icon:'📖',category:'growth',color:'#2F7FC1',unit:'min',time:'22:00',
+    levels:{beginner:10,intermediate:30,advanced:60},levelActivity:{beginner:'독서',intermediate:'독서',advanced:'몰입 독서'},
+    activities:[[/전자책|이북/,'전자책 읽기'],[/소설/,'소설 읽기'],[/오디오북/,'오디오북 듣기']],
+    boosters:{2:'+ 한 줄 메모',6:'+ 한 주 독서 회고'},
+    goal:{beginner:'매일 책을 펼치는 습관 만들기',intermediate:'한 달에 책 2권 읽기',advanced:'깊이 읽고 정리하는 독서'},
+    tip:['책을 침대 머리맡에 두면 시작이 쉬워져요.','읽은 쪽수보다 "펼쳤다"는 사실을 먼저 기록해요.','한 줄 메모를 남기면 다음 날 이어 읽기가 쉬워져요.']},
+  sleep:{key:'sleep',name:'수면',icon:'🌙',category:'health',color:'#6A5BD6',unit:'min',time:'22:45',
+    levels:{beginner:15,intermediate:30,advanced:45},levelActivity:{beginner:'휴대폰 없이 잠자리 준비',intermediate:'휴대폰 없이 잠자리 준비',advanced:'수면 루틴'},
+    title:(d,a)=>`${a} ${d}분`,activities:[],boosters:{3:'+ 조명 낮추기',5:'+ 내일 할 일 메모'},
+    goal:{beginner:'같은 시간에 잠드는 리듬 만들기',intermediate:'하루 7시간 숙면 지키기',advanced:'수면 질 끌어올리기'},
+    tip:['잠드는 시간보다 "잠자리 준비 시작 시간"을 고정하는 게 더 효과적이에요.','침실에 휴대폰 충전기를 두지 않는 실험을 해보세요.']},
+  water:{key:'water',name:'물 마시기',icon:'💧',category:'health',color:'#1597BE',unit:'cup',time:'09:00',
+    routines:[{title:'물 한 컵 (250ml)',offset:0,duration:1},{title:'물 한 컵 (250ml)',offset:240,duration:1},{title:'물 한 컵 (250ml)',offset:420,duration:1}],
+    extra:{title:'물 한 컵 (250ml)',offset:600,duration:1},
+    planText:['하루 물 3컵','하루 물 3컵','하루 물 4컵','하루 물 4컵','하루 물 5컵','하루 물 5컵','하루 물 6컵'],
+    goal:{beginner:'하루 물 6컵까지 자연스럽게 늘리기',intermediate:'하루 물 8컵 마시기',advanced:'하루 2L 수분 섭취'},
+    tip:['책상 위 눈에 보이는 곳에 컵을 두는 것만으로 성공률이 올라가요.','식사 직전에 한 컵을 붙이면 잊어버릴 일이 줄어요.']},
+  study:{key:'study',name:'공부',icon:'✏️',category:'growth',color:'#C98A12',unit:'min',time:'20:00',
+    levels:{beginner:25,intermediate:50,advanced:90},levelActivity:{beginner:'집중 공부',intermediate:'집중 공부',advanced:'몰입 공부'},
+    activities:[[/영어\s?단어|단어/,'영어 단어 외우기'],[/영어|토익|회화/,'영어 공부'],[/코딩|프로그래밍|개발/,'코딩 공부'],[/자격증/,'자격증 공부'],[/수학/,'수학 공부'],[/강의|인강/,'인강 듣기']],
+    boosters:{2:'+ 5분 복습',5:'+ 5분 복습',6:'+ 주간 정리'},
+    goal:{beginner:'매일 25분 집중하는 공부 리듬',intermediate:'하루 두 세션 집중 공부',advanced:'깊은 몰입 공부 습관'},
+    tip:['25분 집중 + 5분 휴식(뽀모도로)부터 시작해요.','공부할 내용을 전날 한 줄로 정해두면 시작이 빨라져요.']},
+  meditation:{key:'meditation',name:'명상',icon:'🧘',category:'mind',color:'#2E9A6E',unit:'min',time:'07:30',
+    levels:{beginner:5,intermediate:10,advanced:20},levelActivity:{beginner:'호흡 명상',intermediate:'호흡 명상',advanced:'마음챙김 명상'},
+    activities:[[/바디\s?스캔/,'바디스캔 명상'],[/걷기\s?명상/,'걷기 명상'],[/감사/,'감사 일기']],
+    boosters:{3:'+ 감정 한 단어 기록',6:'+ 감정 한 단어 기록'},
+    goal:{beginner:'하루 5분 마음 정리하기',intermediate:'스트레스에 덜 흔들리는 하루',advanced:'깊은 집중과 평온 유지'},
+    tip:['양치 직후처럼 매일 하는 행동 뒤에 붙이면 잊지 않아요.','잡념이 드는 건 실패가 아니라 명상의 일부예요.']},
+  morning:{key:'morning',name:'아침 루틴',icon:'🌅',category:'routine',color:'#D9548E',unit:'set',time:'07:00',
+    routines:[{title:'기상 후 물 한 잔',offset:0,duration:2},{title:'5분 스트레칭',offset:5,duration:5},{title:'오늘 할 일 3개 적기',offset:12,duration:5}],
+    extra:{title:'10분 산책',offset:20,duration:10},
+    planText:['물 한 잔 + 스트레칭','물 한 잔 + 스트레칭','+ 할 일 3개 적기','같은 시간 기상 유지','+ 창문 열고 햇빛 보기','주말에도 1시간 이내 기상','한 주 아침 회고'],
+    goal:{beginner:'흔들리지 않는 아침 30분 만들기',intermediate:'아침에 하루를 설계하는 습관',advanced:'아침 1시간을 내 시간으로'},
+    tip:['전날 밤에 물컵과 메모지를 미리 꺼내두세요.','기상 시간을 주말에도 1시간 이내로 유지하면 리듬이 무너지지 않아요.']}
+};
+const titleOf=(db,d,a)=>(db.title||defTitle)(d,a);
+/* 목록에 없는 습관(직접 추가 / AI가 이름을 뽑아낸 습관)용 범용 정의 */
+const CUSTOM_ICONS=[[/기타|피아노|악기|노래|우쿨렐레|드럼|바이올린/,'🎸'],[/일기|글쓰기|글 쓰|블로그|작문|필사/,'✍️'],[/그림|스케치|드로잉/,'🎨'],[/요리|식단|도시락/,'🍳'],[/청소|빨래|설거지|정리/,'🧹'],[/영양제|비타민|약 먹/,'💊'],[/코딩|개발|프로그래밍/,'💻'],[/가계부|저축|지출|돈/,'💰'],[/일본어|중국어|스페인어|외국어|회화/,'🗣️'],[/기도|큐티|말씀|성경|묵상/,'🙏'],[/사진/,'📷'],[/식물|화분|물주기/,'🪴'],[/연락|전화|안부/,'📞'],[/플래너|계획 세우/,'🗒️']];
+const CUSTOM_COLORS=['#7A5AF8','#E0631F','#0E9F8C','#C2417A','#4F6BD6','#9A7B0C','#B04FC7'];
+const hashOf=name=>[...name].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7);
+const customKey=name=>'custom_'+hashOf(name).toString(36);
+const guessIcon=name=>(CUSTOM_ICONS.find(([re])=>re.test(name))||[0,'✨'])[1];
+function customDb(name,o={}){
+  return {key:customKey(name),name,icon:o.icon||guessIcon(name),category:'custom',color:o.color||CUSTOM_COLORS[hashOf(name)%CUSTOM_COLORS.length],unit:'min',time:'20:00',
+    levels:{beginner:10,intermediate:20,advanced:40},levelActivity:{beginner:name,intermediate:name,advanced:name},boosters:{2:'+ 한 줄 기록',6:'+ 한 주 돌아보기'},
+    goal:{beginner:`매일 ${name} 꾸준히 하기`,intermediate:`${name} 실력 키우기`,advanced:`${name}에 깊이 몰입하기`},
+    tip:['처음 7일은 잘하는 것보다 매일 같은 시간에 시작하는 게 목표예요.','시작 직전 행동을 하나 정해두면(예: 저녁 먹고 바로) 잊지 않아요.','하기 싫은 날은 2분만 해도 성공으로 칠게요.']};
+}
+const dbOf=h=>HABIT_DB[h.key]||customDb(h.name,{icon:h.icon,color:h.color});
+function buildPlan(db,base,act){
+  if(db.planText)return db.planText.map((t,i)=>({day:i+1,title:t}));
+  const mult=[1,1,1,1.2,1.2,1.5,1.5];
+  return mult.map((m,i)=>{const d=Math.max(1,Math.round(base*m));const b=db.boosters&&db.boosters[i]?' '+db.boosters[i]:'';return {day:i+1,title:titleOf(db,d,act)+b,duration:d};});
+}
+function buildCreate(key,o={}){
+  const db=o.db||HABIT_DB[key];const level=o.difficulty||'beginner';
+  const act=o.activity||(db.levelActivity&&db.levelActivity[level])||db.name;
+  const d=db.unit==='min'?(o.duration||db.levels[level]):null;
+  const t=o.time||db.time;const dys=o.days||WEEK.slice();
+  const habit={key,name:db.name,icon:db.icon,category:db.category,color:db.color,unit:db.unit,difficulty:level,activity:act,goal:o.goal||db.goal[level],plan:buildPlan(db,d,act)};
+  let routines;
+  if(db.routines){const base=toMin(t);routines=db.routines.map(r=>({title:r.title,time:fromMin(base+r.offset),days:dys,duration:r.duration}));}
+  else routines=[{title:titleOf(db,d,act),time:t,days:dys,duration:d}];
+  return {habit,routines,level,act,d,t,dys,db,
+    actions:[{type:'CREATE_HABIT',habit},...routines.map(r=>({type:'ADD_ROUTINE',habitRef:db.name,routine:r}))]};
+}
+
+/* ---------- NLU: entity extraction ---------- */
+const HABIT_PATTERNS={
+  exercise:[/운동/,/헬스/,/걷기|걸었|걷고|걸을|걸어|걷는/,/산책/,/달리기|러닝|조깅|뛰/,/체력/,/스쿼트|푸시업|팔굽혀|플랭크/,/홈트/,/근력|근육/,/살\s?빼|다이어트|체중|뱃살/,/요가/,/스트레칭/,/자전거|수영|등산/],
+  reading:[/독서/,/책/,/읽/,/페이지|쪽씩/],
+  sleep:[/수면/,/잠을|잠이|잠자|꿀잠|숙면|잠\s/,/취침/,/일찍\s?자|늦게\s?자|자는\s?시간|잠드/,/불면/],
+  water:[/물\s?(?:을|좀|한|두|세|많이|자주|마시|마셔|섭취|\d)/,/수분/,/(?:^|\s)물(?:\s|$)/],
+  study:[/공부/,/학습/,/영어|단어|토익|자격증|시험|코딩|강의|인강/],
+  meditation:[/명상/,/호흡/,/마음\s?챙김|마음\s?정리/,/스트레스/,/불안/],
+  morning:[/아침\s?(?:루틴|습관)/,/모닝/,/일찍\s?일어|기상/]
+};
+function detectHabit(t){
+  let best=null,score=0;
+  for(const[k,list]of Object.entries(HABIT_PATTERNS)){
+    let s=list.reduce((n,re)=>n+(re.test(t)?1:0),0);
+    if(k==='morning'&&/아침\s?(?:루틴|습관)|모닝\s?루틴/.test(t))s+=3;
+    if(s>score){score=s;best=k;}
+  }
+  return {key:best,score};
+}
+const NUM_KO={한:1,두:2,세:3,네:4,다섯:5,여섯:6,일곱:7,여덟:8,아홉:9,열:10,열한:11,열두:12};
+const PERIODS=[[/새벽/,'05:30','새벽'],[/아침|오전|출근\s?전|기상\s?(?:후|하고|직후)|일어나서|일어나자마자/,'07:00','아침'],[/점심/,'12:30','점심'],[/퇴근\s?(?:후|하고)|저녁/,'19:00','저녁'],[/오후/,'15:00','오후'],[/밤|자기\s?전|잠들기\s?전|취침\s?전|잘\s?때/,'22:00','밤']];
+function extractTime(t,hk){
+  let m=t.match(/(\d{1,2}):(\d{2})/);
+  if(m&&+m[1]<24)return {time:pad(+m[1])+':'+m[2],explicit:true,raw:m[0]};
+  m=t.match(/(새벽|아침|오전|낮|점심|오후|저녁|밤)?\s*(\d{1,2}|열한|열두|다섯|여섯|일곱|여덟|아홉|한|두|세|네|열)\s*시(?!간)(?:\s*(반)|\s*(\d{1,2})\s*분)?/);
+  if(m){
+    let h=/\d/.test(m[2])?+m[2]:NUM_KO[m[2]];const per=m[1];const min=m[3]?30:m[4]?clamp(+m[4],0,59):0;
+    if(h>24)return null;
+    if(per){
+      if((per==='오후'||per==='저녁')&&h<12)h+=12;
+      else if(per==='밤'){if(h>=6&&h<12)h+=12;else if(h===12)h=0;}
+      else if(per==='낮'||per==='점심'){if(h<=6)h+=12;}
+      else if((per==='아침'||per==='오전')&&h===12)h=0;
+    }else if(h>=1&&h<=6&&!['sleep','morning','meditation'].includes(hk))h+=12;
+    if(h===24)h=0;
+    return {time:pad(h)+':'+pad(min),explicit:true,raw:m[0],noPeriod:!per};
+  }
+  for(const[re,tt,label]of PERIODS){if(re.test(t))return {time:tt,explicit:false,raw:'',label};}
+  return null;
+}
+const KO_MIN={오:5,십:10,십오:15,이십:20,이십오:25,삼십:30,사십:40,사십오:45,오십:50,육십:60};
+function extractDuration(t){
+  const out=[];let m;
+  const re=/(\d+(?:\.\d)?)\s*(시간|분)(\s*반)?(\s*(?:으로|로|만|정도로|씩으로))?/g;
+  while((m=re.exec(t))){let v=+m[1]*(m[2]==='시간'?60:1);if(m[2]==='시간'&&m[3])v+=30;out.push({min:Math.round(v),idx:m.index,target:!!m[4]});}
+  const re2=/(?:^|\s)(한|두|세|반)\s*시간(\s*반)?(\s*(?:으로|로|만))?/g;
+  while((m=re2.exec(t))){let v={한:60,두:120,세:180,반:30}[m[1]];if(m[2])v+=30;out.push({min:v,idx:m.index,target:!!m[3]});}
+  const re3=/(?:^|\s)(십오|이십오|사십오|이십|삼십|사십|오십|육십|십|오)\s*분(\s*(?:으로|로|만))?/g;
+  while((m=re3.exec(t))){out.push({min:KO_MIN[m[1]],idx:m.index,target:!!m[2]});}
+  if(!out.length)return null;
+  out.sort((a,b)=>a.idx-b.idx);
+  const tg=out.find(x=>x.target)||out[out.length-1];const from=out.length>1?out.find(x=>x!==tg):null;
+  return {target:tg.min,from:from?from.min:null,explicitTarget:!!tg.target};
+}
+const COUNT_KO={한:1,두:2,세:3,네:4,다섯:5,여섯:6,일곱:7};
+function extractDays(t){
+  if(/매일|날마다|하루도\s?빠짐|데일리|everyday/.test(t))return WEEK.slice();
+  if(/평일|주중/.test(t))return ['MON','TUE','WED','THU','FRI'];
+  if(/주말/.test(t))return ['SAT','SUN'];
+  let m=t.match(/([월화수목금토일])요일?\s*(?:부터|~|-)\s*([월화수목금토일])요일?/);
+  if(m){const a=WEEK.indexOf(KO_DAY[m[1]]),b=WEEK.indexOf(KO_DAY[m[2]]);if(a>=0&&b>=a)return WEEK.slice(a,b+1);}
+  const set=new Set();let r;
+  const re1=/(?:^|\s|,|·)([월화수목금토일])요일/g;while((r=re1.exec(t)))set.add(KO_DAY[r[1]]);
+  const re2=/(?:^|\s)([월화수목금토일]{2,7})(?=\s|에|마다|만|으로|로|요일|$)/g;
+  while((r=re2.exec(t))){const ch=[...r[1]];if(new Set(ch).size===ch.length)ch.forEach(c=>set.add(KO_DAY[c]));}
+  const re3=/[월화수목금토일](?:\s*[,·\/]\s*[월화수목금토일])+/g;
+  while((r=re3.exec(t)))r[0].replace(/[^월화수목금토일]/g,'').split('').forEach(c=>set.add(KO_DAY[c]));
+  if(set.size)return WEEK.filter(d=>set.has(d));
+  m=t.match(/(?:주|일주일에|한\s?주에)\s*(\d|한|두|세|네|다섯|여섯|일곱)\s*(?:번|회|일)/);
+  if(m){const n=/\d/.test(m[1])?+m[1]:COUNT_KO[m[1]];
+    return ({1:['SAT'],2:['TUE','THU'],3:['MON','WED','FRI'],4:['MON','TUE','THU','FRI'],5:['MON','TUE','WED','THU','FRI'],6:['MON','TUE','WED','THU','FRI','SAT'],7:WEEK.slice()})[clamp(n,1,7)];}
+  return null;
+}
+function extractDifficulty(t){
+  if(/빡세|빡빡|빡시|강하게|고강도|하드|고급|세게|한계/.test(t))return 'advanced';
+  if(/부담\s?(?:없|안|적)|가볍|가벼운|쉽|쉬운|조금씩|무리\s?(?:없|하지|안)|힘든\s?(?:건|거)\s?싫|초보|처음|작게|천천히|체력이\s?(?:너무\s?)?떨어|간단|짧게|귀찮|미루|미뤄|작심삼일|자꾸\s?포기/.test(t))return 'beginner';
+  if(/제대로|본격|중급|꾸준히\s?열심히/.test(t))return 'intermediate';
+  return null;
+}
+const FAIL_RE=/못\s?했|안\s?했|못\s?갔|빼먹|건너\s?뛰|스킵|실패했|놓쳤|못\s?(?:마셨|읽었|잤|걸었|뛰었|일어났|지켰)|안\s?(?:갔|읽었|마셨|걸었|지켰)|까먹었|까먹음|깜빡했|깜빡함|잊어버렸|잊었|쉬었|패스했|땡땡이/;
+const DONE_RE=/했어|했다|했음|했지|했습니다|완료|해냈|끝냈|마쳤|다\s?했|마셨|읽었|걸었|뛰었|잤어|일어났|지켰|체크해/;
+function extractOutcome(t){if(FAIL_RE.test(t))return 'fail';if(DONE_RE.test(t)&&!/성공률/.test(t))return 'done';return null;}
+const REASONS={
+  tired:{label:'피로',re:/피곤|피로|지쳐|지침|졸려|졸리|녹초|기운이?\s?없|체력이?\s?(?:없|바닥)|힘이\s?없|힘들어서/},
+  busy:{label:'시간 부족',re:/바빠|바빴|바쁘|바쁜|시간이?\s?(?:없|부족)|야근|일이\s?많|정신\s?없/},
+  forgot:{label:'잊어버림',re:/까먹|잊어|잊었|깜빡|생각을?\s?못/},
+  motivation:{label:'의욕 부족',re:/귀찮|하기\s?싫|의욕|동기|게을|미뤘|미루|싫었/},
+  sick:{label:'컨디션 난조',re:/아파|아팠|아프|몸살|감기|두통|컨디션/},
+  weather:{label:'날씨',re:/비가|비\s?와|비\s?오|추워|추웠|더워|더웠|날씨|눈이\s?와/},
+  social:{label:'약속·일정',re:/약속|회식|술|모임|친구|여행|출장/},
+  burden:{label:'루틴 부담',re:/너무\s?(?:길|많|어려)|부담|벅차|버거/}
+};
+function extractReason(t){for(const[k,v]of Object.entries(REASONS))if(v.re.test(t))return k;return null;}
+function extractActivity(hk,t){const db=HABIT_DB[hk];if(!db||!db.activities)return null;for(const[re,name]of db.activities)if(re.test(t))return name;return null;}
+function extractGoal(raw){const m=raw.match(/목표(?:는|가|를|로)?\s*(.+)/);if(!m)return null;let g=m[1].replace(/(?:이야|야|예요|이에요|입니다|이거든|거든|으로\s?할래|로\s?할래|로\s?해줘|으로\s?해줘)[.!~]*\s*$/,'').replace(/[.!~]+$/,'').trim();return g.length>=2?g.slice(0,40):null;}
+const STRUGGLE=/미루|미뤄|작심삼일|포기|귀찮|힘든\s?(?:건|거)|힘들|부담|떨어진|지쳐|못\s?하겠|싫어/;
+const NAME_FILLER=new Set(['요즘','나','저','나는','저는','내가','제가','매일','매일매일','하루에','하루','꾸준히','부담','없이','없는','가볍게','좀','한번','이제','오늘부터','내일부터','다시','진짜','새로','아침마다','저녁마다','자기','전에','퇴근','후','후에','평일','주말','같이','작은','쉬운','간단한','더','가벼운','짧은','긴','쉬운','편한','부담없는','새로운','나만의','저녁','아침','밤','오전','오후']);
+const NAME_GENERIC=/^(새|새로운|좋은|하나|어떤|내|무슨|이런|그런|건강한|습관|루틴|아무|모든|여러|다른|무언가|뭔가)$/;
+function extractCustomName(t){
+  let m=t.match(/^(.*?)\s*(?:습관|루틴)/);
+  let src=m?m[1]:null;
+  if(!src){const m2=t.match(/^(.*?)(?:을|를)\s(?:.*?\s)?(?:시작하고|하고|해보고|배우고|연습하고)\s?싶/)||t.match(/^(.*?)(?:을|를)\s*(?:시작하고|하고|해보고|배우고|연습하고)\s?싶/);if(m2)src=m2[1];}
+  if(!src)return null;
+  src=src.replace(/\d+\s*(?:분|시간|시)(?:씩|에|마다)?/g,' ').replace(/[월화수목금토일]{2,7}(?:에|마다)?/g,' ');
+  let toks=src.split(/\s+/).filter(Boolean);
+  while(toks.length&&NAME_FILLER.has(toks[0]))toks.shift();
+  toks=toks.filter(x=>!NAME_FILLER.has(x));
+  if(!toks.length)return null;
+  let last=toks[toks.length-1].replace(/(?:을|를|의|에|은|이|가)$/,'');
+  if(/는$/.test(last)&&last.length>=2)last=last.replace(/는$/,'기');
+  toks[toks.length-1]=last;
+  if(toks.length>1&&/^하기$/.test(last))toks.pop();
+  const name=toks.join(' ').trim();
+  if(name.length<2||name.length>14||NAME_GENERIC.test(name)||/^\d+$/.test(name))return null;
+  return name;
+}
+const norm=s=>s.replace(/[“”"'‘’!?.~…]/g,' ').replace(/(?:ㅋ|ㅎ|ㅠ|ㅜ){2,}/g,' ').replace(/([가-힣])[ㄱ-ㅎㅏ-ㅣ]+(?=\s|$)/g,'$1').replace(/\s+/g,' ').trim().toLowerCase();
+/* ---------- 오타 보정: 자모 단위 편집거리 1 이내면 사전 단어로 고친다 ---------- */
+const TYPO_DICT=['운동','걷기','산책','달리기','스트레칭','요가','독서','수면','명상','공부','영어','아침','루틴','습관','만들어','바꿔','바꿔줘','변경','분석','추가','삭제','시간','요일','쉽게','가볍게','피곤','깜빡','완료','못했어','했어','줄여','늘려','옮겨','해줘','물마시기','스트레스'];
+function jamo(w){const out=[];for(const ch of w){const c=ch.charCodeAt(0)-0xAC00;if(c>=0&&c<11172){out.push('c'+Math.floor(c/588),'v'+Math.floor(c%588/28));if(c%28)out.push('t'+c%28);}else out.push(ch);}return out;}
+function editDist(a,b){const d=[...Array(b.length+1).keys()];for(let i=1;i<=a.length;i++){let p=d[0];d[0]=i;for(let j=1;j<=b.length;j++){const t=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,p+(a[i-1]===b[j-1]?0:1));p=t;}}return d[b.length];}
+function fixTypos(t,state){
+  const dict=TYPO_DICT.concat(state?state.habits.filter(h=>!HABIT_DB[h.key]).map(h=>h.name.split(/\s+/)[0]).filter(x=>x.length>=2):[]);
+  const fixes=[];
+  const toks=t.split(' ').map(tok=>{
+    if(!/[가-힣]/.test(tok)||dict.some(w=>tok.startsWith(w)))return tok;
+    for(const w of dict){const L=[...w].length;if(L<2||[...tok].length<L)continue;const head=[...tok].slice(0,L).join('');
+      if(head!==w&&editDist(jamo(head),jamo(w))===1){fixes.push({from:head,to:w});return w+[...tok].slice(L).join('');}}
+    return tok;});
+  return {text:toks.join(' '),fixes};
+}
+/* 같은 상황에서 같은 문장만 반복하지 않도록 */
+const lastVar={};
+function V(key,arr){if(arr.length<2)return arr[0];let i;do{i=Math.floor(Math.random()*arr.length);}while(arr.length>1&&i===lastVar[key]);lastVar[key]=i;return arr[i];}
+function quoteStruggle(e){const m=(e.raw||'').match(/(너무\s?[가-힣]*힘들[가-힣]*|[가-힣]*부담[가-힣]*|귀찮[가-힣]*|피곤[가-힣]*|지쳐[가-힣]*|벅차[가-힣]*)/);return m?m[1].trim():null;}
+
+function understand(raw,state){
+  const t=norm(raw);const hk=detectHabit(t);
+  let habitName=hk.key?HABIT_DB[hk.key].name:null,customName=null;
+  if(state){const flat=t.replace(/\s/g,'');let best=null;
+    state.habits.forEach(h=>{if(HABIT_DB[h.key])return;const n=h.name.toLowerCase().replace(/\s/g,'');if(n&&flat.includes(n)&&(!best||n.length>best.n.length))best={h,n};});
+    if(!best&&!hk.key)state.habits.forEach(h=>{if(HABIT_DB[h.key]||best)return;const first=h.name.toLowerCase().split(/\s+/)[0];if(first.length>=2&&new RegExp('(?:^|\\s)'+first.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).test(t))best={h,n:first};});
+    if(best){hk.key=best.h.key;hk.score=9;habitName=best.h.name;}}
+  if(!hk.key)customName=extractCustomName(t);
+  const time=extractTime(t,hk.key);
+  if(time&&time.noPeriod&&state&&hk.key){const h=state.habits.find(x=>x.key===hk.key);const r=h&&state.routines.filter(x=>x.habitId===h.id).sort((a,b)=>a.time.localeCompare(b.time))[0];
+    const hh=+time.time.slice(0,2);if(r&&+r.time.slice(0,2)>=13&&hh>=1&&hh<12)time.time=pad(hh+12)+time.time.slice(2);}
+  const t2=time&&time.raw?t.replace(time.raw,' '):t;
+  let dur=extractDuration(t2);
+  if(dur&&hk.key==='sleep'&&dur.target>=180)dur=null;
+  return {raw,text:t,habitKey:hk.key,habitName,customName,habitScore:hk.score,time,duration:dur,days:extractDays(t2),difficulty:extractDifficulty(t),
+    outcome:extractOutcome(t),reason:extractReason(t),activity:hk.key&&HABIT_DB[hk.key]?extractActivity(hk.key,t):null,
+    dateOffset:/그제|그저께|이틀\s?전/.test(t)?-2:/어제/.test(t)?-1:0,goal:extractGoal(raw),struggle:STRUGGLE.test(t)};
+}
+
+/* ---------- 습관 Q&A 지식 베이스 (질문형 문장일 때만 사용, 앱 상태는 바꾸지 않음) ---------- */
+const QA_Q=/\?|걸려|걸릴|걸리나|같아|것\s?같|까$|까요|나요|어때|어떄|뭐야|뭐예요|뭔가요|얼마나|몇\s?(?:개|시|분|시간|잔|일|권|걸음|번)|어떻게|어떡|왜|좋을|좋아\s?$|좋아요\s?$|돼\s?$|되나|될까|할까|알려줘|알려주세요|궁금|맞아|있어\s?$|해야\s?(?:해|돼|하나)|하는\s?법|방법|팁/;
+const pct=(A,b)=>A.byBucket[b]&&A.byBucket[b].total>=5?A.byBucket[b].rate:null;
+const QA=[
+ {id:'how_long',re:[/(?:습관|루틴|몸에\s?배).{0,12}(?:얼마나|며칠|몇\s?일|기간|오래)/,/66일|21일|100일/],
+  a:['연구마다 다르지만, 새 습관이 자동처럼 굳어지기까지 평균 두 달 정도(약 66일) 걸렸다는 결과가 많이 알려져 있어요. 쉬운 습관은 몇 주, 어려운 습관은 몇 달까지 걸리기도 해요.\n흔히 말하는 21일 법칙은 근거가 약한 편이라, 날짜보다 "끊기지 않고 이어가는 흐름"에 집중하는 게 좋아요.'],
+  p:(s,A)=>{const old=s.habits.map(h=>h.createdAt).sort()[0];if(!old)return null;const d=Math.round((Date.now()-new Date(old))/864e5);return `지금 가장 오래된 습관은 ${d}일째예요.`;},
+  f:['하루 빼먹으면 어떡해?','습관 몇 개까지 동시에 해도 돼?']},
+ {id:'how_many',re:[/(?:몇\s?개|여러\s?개|동시에|한꺼번에|한\s?번에).{0,12}(?:습관|루틴)/,/(?:습관|루틴).{0,10}(?:몇\s?개|동시에|한꺼번에)/],
+  a:['처음엔 1~2개로 시작하는 걸 추천해요. 습관은 처음 몇 주가 가장 에너지를 많이 쓰는 시기라, 한꺼번에 늘리면 전부 흔들리기 쉬워요.\n하나가 거의 자동으로 될 때(성공률 80% 이상이 2주 정도 유지될 때) 다음 습관을 더하는 방식이 안정적이에요.'],
+  p:(s,A)=>s.habits.length?`지금 ${s.habits.length}개를 관리하고 있어요.${s.habits.length>=5?' 성공률이 낮은 습관이 있다면 잠시 줄이는 것도 방법이에요.':''}`:null,
+  f:['📊 내 습관 분석해줘','습관 쌓기가 뭐야?']},
+ {id:'best_time',re:[/(?:아침|저녁|밤|오전|오후).{0,14}(?:좋아|나아|낫|효과|중에|vs|어느)/,/언제\s?(?:하는\s?게|하면|해야).{0,6}(?:좋|효과|나아)/,/몇\s?시에\s?(?:하는\s?게|해야|하면)/],
+  a:['정답 시간은 없어요. 가장 좋은 시간은 "매일 같은 시간에 실제로 할 수 있는 때"예요.\n의지력이 남아 있는 아침이 유리하다는 사람도 많지만, 저녁 루틴이 더 잘 맞는 사람도 많아요. 며칠 기록해보고 성공률이 높은 시간대로 옮기는 게 가장 확실해요.'],
+  p:(s,A)=>A.bestBucket?`지금까지 기록으로는 ${A.bestBucket.name} 시간대 성공률이 ${A.bestBucket.rate}%로 가장 높아요.`:null,
+  f:['📊 내 습관 분석해줘','습관을 까먹지 않으려면?']},
+ {id:'miss_day',re:[/(?:하루|한\s?번|한\s?날|어쩌다).{0,10}(?:빼먹|놓치|못\s?하|건너뛰|쉬|안\s?하)/,/(?:빼먹|놓치|건너뛰)(?:으면|면|었는데)/,/연속.{0,8}(?:끊|깨|0)/],
+  a:['한 번 빠지는 건 습관 형성에 거의 영향이 없다는 연구가 있어요. 중요한 건 "두 번 연속으로는 빠지지 않기"예요.\n놓친 다음 날은 원래 강도의 절반만 해도 성공으로 치고 흐름부터 이어가세요.','괜찮아요. 하루 빠진 걸로 습관이 무너지지 않아요. 진짜 위험한 건 "어차피 끊겼으니까" 하고 며칠을 놓아버리는 거예요.\n다음 날 아주 작게라도 다시 하면, 그게 오히려 습관을 더 단단하게 만들어요.'],
+  p:(s,A)=>A.recovery!=null?`참고로 지금까지 실패한 다음 기록이 성공인 비율(회복력)은 ${A.recovery}%예요.`:null,
+  f:['쉬는 날을 정해도 돼?','하기 싫을 땐 어떻게 해?']},
+ {id:'motivation',re:[/동기\s?부여|의욕이?\s?(?:안|없)|하기\s?싫을\s?때|귀찮을\s?때|하기\s?싫으면|동기가?\s?(?:안|없)/],
+  a:['의욕은 시작하기 전에 생기는 게 아니라, 시작한 뒤에 따라오는 경우가 많아요.\n"딱 2분만" 하기로 정하고 시작해보세요. 2분 하고 그만둬도 성공이에요. 막상 시작하면 이어서 하게 되는 날이 훨씬 많아요.','하기 싫은 날이 있는 건 정상이에요. 그런 날을 위해 "최소 버전"을 정해두세요.\n운동이면 스쿼트 10회, 독서면 한 쪽처럼요. 최소 버전도 성공으로 기록하면 흐름이 끊기지 않아요.'],
+  f:['2분 규칙이 뭐야?','보상을 주는 게 좋아?']},
+ {id:'two_min',re:[/2분\s?규칙|이분\s?규칙|2분만/],strong:true,
+  a:['2분 규칙은 새 습관을 "2분 안에 끝나는 버전"으로 시작하는 방법이에요.\n예: 운동 → 운동화 신고 나가기, 독서 → 책 한 쪽 읽기, 공부 → 책상에 앉아 책 펴기.\n핵심은 잘하는 것보다 "매일 시작하는 사람"이 되는 거예요. 시작이 자동이 되면 그때 시간을 늘려요.'],
+  f:['습관 쌓기가 뭐야?','언제 강도를 올려야 해?']},
+ {id:'stacking',re:[/습관\s?쌓기|해빗\s?스태킹|스태킹|다른\s?습관에?\s?붙|기존\s?습관에/],strong:true,
+  a:['습관 쌓기는 이미 매일 하는 행동 바로 뒤에 새 습관을 붙이는 방법이에요.\n"[기존 행동]을 하고 나면 [새 습관]을 한다" 형태로 정해보세요.\n예: 양치하고 나면 명상 2분, 저녁 먹고 나면 10분 걷기, 침대에 누우면 책 한 쪽.'],
+  f:['습관을 까먹지 않으려면?','🌅 아침 루틴 만들어줘']},
+ {id:'forget',re:[/까먹지\s?않|잊지\s?않|안\s?까먹|기억하는\s?법|자꾸\s?(?:까먹|잊어)|깜빡하지\s?않/],
+  a:['잊어버리는 건 의지보다 "신호"의 문제예요. 세 가지가 효과적이에요.\n1) 시간과 장소를 구체적으로 정하기: "저녁 8시, 거실에서"\n2) 매일 하는 행동 뒤에 붙이기: "저녁 먹고 바로"\n3) 눈에 보이게 두기: 책을 베개 위에, 물컵을 책상 위에'],
+  p:(s,A)=>A.reasons.forgot?`기록상 '잊어버림'으로 놓친 게 ${A.reasons.forgot}번이에요. 그 습관부터 신호를 정해보세요.`:null,
+  f:['습관 쌓기가 뭐야?','환경을 어떻게 바꿔?']},
+ {id:'environment',re:[/환경(?:을|을\s?어떻게|\s?설계|\s?바꾸)|눈에\s?보이게|주변을|방을?\s?어떻게/],
+  a:['의지력보다 환경이 행동을 더 크게 좌우해요.\n• 좋은 습관은 쉽게: 운동복을 전날 꺼내두기, 책을 손 닿는 곳에\n• 나쁜 습관은 어렵게: 휴대폰은 다른 방에서 충전, 앱은 홈 화면에서 빼기\n시작까지 걸리는 단계를 하나만 줄여도 실행률이 확 달라져요.'],
+  f:['휴대폰을 덜 보려면?','2분 규칙이 뭐야?']},
+ {id:'reward',re:[/보상|상을?\s?주|선물|칭찬/],
+  a:['보상은 효과가 있어요. 다만 습관과 어울리는 작은 보상이 좋아요.\n예: 운동 후 좋아하는 음료, 공부 후 좋아하는 영상 10분. 운동하고 폭식처럼 습관을 깎아먹는 보상은 피하세요.\n체크 표시 자체도 보상이에요. 오늘 탭에서 ✓를 누르는 순간을 즐겨보세요.'],
+  f:['하기 싫을 땐 어떻게 해?','친구랑 같이 하면 좋아?']},
+ {id:'bad_habit',re:[/나쁜\s?습관|끊고\s?싶|끊는\s?(?:법|방법)|줄이고\s?싶|고치고\s?싶은\s?습관/],
+  a:['나쁜 습관은 "참기"보다 "바꿔 끼우기"가 잘 돼요.\n1) 언제 그 행동을 하는지(신호) 찾기 2) 그때 할 대체 행동 정하기 3) 그 행동을 하기 어렵게 환경 바꾸기.\n예: 자기 전 휴대폰 → 침대 옆에 책 두고, 충전기는 거실로.'],
+  f:['휴대폰을 덜 보려면?','환경을 어떻게 바꿔?']},
+ {id:'phone',re:[/휴대폰|스마트폰|핸드폰|폰\s?(?:을|중독|사용|그만|덜)|유튜브|쇼츠|릴스|sns|인스타|틱톡/],
+  a:['휴대폰 사용은 "몇 분 줄이기"보다 "언제 안 볼지"를 정하는 게 효과적이에요.\n• 침실에서는 충전하지 않기\n• 앱 하나만 홈 화면에서 빼기\n• 자기 전 30분은 휴대폰 대신 다른 루틴(독서, 스트레칭) 넣기'],
+  f:['🌙 수면 습관 만들어줘','📖 독서 루틴 만들어줘']},
+ {id:'goal_system',re:[/목표.{0,8}(?:시스템|세우|정하|어떻게)|목표를?\s?(?:어떻게|크게|작게)/],
+  a:['목표는 방향을 정해주고, 습관은 매일의 행동을 정해줘요. 목표만 있고 습관이 없으면 결과가 잘 안 나와요.\n"책 20권 읽기"라는 목표가 있다면, 매일 할 행동은 "자기 전 10분 독서"처럼 작고 구체적으로 정하는 게 좋아요.'],
+  p:(s)=>s.user.goal?`지금 저장된 목표는 "${s.user.goal}"예요.`:null,
+  f:['📖 독서 루틴 만들어줘','습관 몇 개까지 동시에 해도 돼?']},
+ {id:'why_track',re:[/(?:기록|체크).{0,10}(?:왜|해야|필요|의미|도움)/],
+  a:['기록은 두 가지에 도움이 돼요. 하나는 "나는 이걸 하는 사람"이라는 느낌을 매일 확인시켜 주는 것, 다른 하나는 언제 왜 실패하는지 패턴을 보여주는 거예요.\n이 앱의 분석과 DNA 탭은 그 기록으로 계산돼요.'],
+  f:['📊 내 습관 분석해줘','습관 DNA가 뭐야?']},
+ {id:'willpower',strong:true,re:[/(?:계속|자꾸|맨날|매번).{0,8}(?:실패|못\s?지키|포기)|의지가?\s?(?:약|부족|없)|의지력|나는\s?왜\s?(?:안|못)/],
+  a:['계속 실패한다면 대부분 의지가 아니라 설계의 문제예요. 루틴이 너무 크거나, 시간이 안 맞거나, 시작 신호가 없는 경우가 많아요.\n강도를 절반으로 줄이고, 매일 하는 행동 뒤에 붙이는 것부터 해보세요.'],
+  p:(s,A)=>{const w=A.byHabit.filter(x=>x.total>=3).sort((a,b)=>a.rate-b.rate)[0];return w?`기록상 가장 흔들리는 습관은 ${w.icon} ${w.name}(${w.rate}%)이고, 실패 원인 1위는 '${A.topReason?A.topReason.label:'기타'}'예요.`:null;},
+  f:['📊 내 습관 분석해줘','2분 규칙이 뭐야?']},
+ {id:'weekend',re:[/주말(?:에|엔|에는|은).{0,12}(?:어떻게|해야|쉬|안\s?해|빼도|같이)/],
+  a:['주말에 리듬이 무너지기 쉬워요. 완전히 쉬기보다 평일보다 가벼운 "주말 버전"을 정해두는 걸 추천해요.\n특히 기상과 취침 시간은 평일과 1시간 이상 차이 나지 않게 유지하면 월요일이 훨씬 편해요.'],
+  f:['쉬는 날을 정해도 돼?','독서 요일을 평일로 바꿔줘']},
+ {id:'rest_day',re:[/쉬는\s?날|휴식일|쉬어도\s?(?:돼|될까|되나)|매일\s?(?:해야|안\s?해도)/],
+  a:['계획된 휴식은 괜찮아요. 습관에 따라 매일보다 주 3~5회가 더 잘 맞기도 해요(특히 근력 운동).\n다만 "오늘은 그냥 쉴래"가 아니라 요일을 미리 정해두세요. 정해진 휴식은 실패가 아니라 루틴의 일부예요.'],
+  f:['독서를 주 3회로 바꿔줘','하루 빼먹으면 어떡해?']},
+ {id:'level_up',re:[/(?:언제|어느\s?때|어떨\s?때).{0,10}(?:늘려|올려|난이도|강도|시간을?\s?늘)|강도를?\s?언제|루틴.{0,6}(?:자주|얼마나\s?자주)\s?(?:바꿔|바꾸)/],
+  a:['2주 정도 성공률이 80% 이상이고, "이 정도는 쉽다"고 느껴질 때 한 단계 올리는 게 좋아요. 한 번에 20~30% 정도만 늘리세요.\n반대로 3번 연속 놓치면 내리는 신호예요. 이 앱은 연속 실패를 감지하면 먼저 조정을 제안해요.'],
+  p:(s,A)=>{const g=A.byHabit.filter(x=>x.total>=5&&x.rate>=80);return g.length?`지금 기준으로는 ${g.map(x=>x.icon+' '+x.name).join(', ')}이(가) 올려볼 만해요.`:'지금은 성공률 80%를 넘는 습관이 없어서, 강도 유지를 추천해요.';},
+  f:['📊 내 습관 분석해줘']},
+ {id:'implementation',re:[/실행\s?의도|if.?then|언제\s?어디서/],strong:true,
+  a:['실행 의도는 "언제, 어디서, 무엇을" 미리 정해두는 방법이에요. "운동해야지"보다 "평일 저녁 8시에 거실에서 10분 걷기"처럼 구체적으로 정하면 실행률이 크게 올라간다는 연구가 많아요.\n이 앱의 루틴이 시간·요일·길이를 모두 갖는 이유도 그거예요.'],
+  f:['습관 쌓기가 뭐야?']},
+ {id:'burnout',strong:true,re:[/번아웃|너무\s?지쳤|아무것도\s?하기\s?싫|다\s?그만두고\s?싶|무기력/],
+  a:['많이 지치셨군요. 그럴 땐 습관을 늘리는 것보다 지키는 걸 최소한으로 줄이는 게 맞아요.\n하나만 남기고 나머지는 잠시 쉬어도 괜찮아요. 잠과 식사처럼 기본을 먼저 챙기세요.\n이런 상태가 2주 넘게 이어지거나 일상이 힘들 정도라면, 가까운 사람이나 전문가와 이야기해보는 것도 꼭 권하고 싶어요.'],
+  f:['루틴을 더 쉽게 바꿔줘']},
+ {id:'ex_time',re:[/운동.{0,12}(?:언제|몇\s?시|아침|저녁|공복|식후).{0,10}(?:좋|효과|나아|해야)/],
+  a:['운동은 "꾸준히 할 수 있는 시간"이 가장 좋은 시간이에요. 아침 운동은 하루를 놓치지 않게 해주고, 저녁 운동은 몸이 풀려 있어 기록이 잘 나오는 편이에요.\n잠들기 직전의 고강도 운동만 피하면, 어느 쪽이든 괜찮아요.'],
+  p:(s,A)=>A.bestBucket?`기록상으로는 ${A.bestBucket.name} 시간대가 가장 잘 지켜지고 있어요.`:null,
+  f:['🏃 운동 습관 만들어줘']},
+ {id:'ex_amount',re:[/운동.{0,10}(?:얼마나|몇\s?분|하루에|일주일에|주\s?몇)/],
+  a:['WHO는 성인에게 일주일에 중간 강도 운동 150분 이상(하루 30분씩 5일 정도)을 권장해요.\n하지만 처음부터 목표로 삼을 필요는 없어요. 하루 10분 걷기로 시작해서 습관이 잡히면 늘리는 게 오래가요.'],
+  f:['🏃 운동 습관 만들어줘','언제 강도를 올려야 해?']},
+ {id:'steps',re:[/만\s?보|걸음\s?수|몇\s?걸음/],
+  a:['만 보는 상징적인 숫자예요. 연구에서는 하루 7천~8천 보 정도부터 건강 효과가 뚜렷해진다는 결과도 많아요.\n지금 걸음 수에서 하루 1천 보씩 늘려가는 게 현실적이에요.'],
+  f:['🏃 운동 습관 만들어줘']},
+ {id:'water_amount',re:[/물.{0,10}(?:얼마나|몇\s?잔|몇\s?리터|몇\s?ml|하루에)/],
+  a:['하루 1.5~2L 정도가 자주 권장되지만, 체격·활동량·날씨에 따라 달라요. 음식과 다른 음료로도 수분을 섭취하니 "2L를 꼭 채워야 한다"는 부담은 갖지 않아도 돼요.\n목마르기 전에 조금씩, 식사 전에 한 컵씩 마시는 습관이 실천하기 쉬워요. 질환이 있다면 의사와 상의하세요.'],
+  f:['💧 물 마시기 습관 만들어줘']},
+ {id:'sleep_hours',re:[/(?:잠|수면).{0,10}(?:몇\s?시간|얼마나)|몇\s?시간\s?(?:자|잠)/],
+  a:['성인에게는 보통 7~9시간 수면이 권장돼요. 시간만큼 중요한 게 "매일 비슷한 시간에 자고 일어나는 것"이에요.\n수면 시간을 늘리고 싶다면 기상 시간은 고정하고, 잠자리에 드는 시간을 15분씩 앞당겨보세요.'],
+  f:['🌙 수면 습관 만들어줘','잠이 안 올 땐 어떻게 해?']},
+ {id:'insomnia',re:[/잠이?\s?(?:안\s?(?:와|오|올|옵)|잘\s?안)|잠들기\s?(?:어려|힘들)|불면|뒤척/],
+  a:['도움이 되는 기본 수칙이에요.\n• 매일 같은 시간에 일어나기(주말 포함)\n• 오후 늦게 카페인 피하기\n• 자기 전 30분은 화면 대신 조명을 낮추고 쉬기\n• 20분 넘게 잠이 안 오면 잠깐 일어났다가 졸릴 때 다시 눕기\n몇 주 넘게 계속되면 전문가 상담을 권해요.'],
+  f:['🌙 수면 습관 만들어줘','커피는 몇 시까지 괜찮아?']},
+ {id:'caffeine',re:[/카페인|커피.{0,10}(?:몇\s?시|언제|끊|줄)/],
+  a:['카페인은 몸에서 절반이 빠지는 데 보통 5시간 안팎 걸려요. 그래서 잠에 영향을 줄이려면 잠들기 6~8시간 전부터는 피하는 게 좋아요.\n밤 11시에 잔다면 오후 3~4시 이후로는 디카페인을 추천해요.'],
+  f:['잠이 안 올 땐 어떻게 해?']},
+ {id:'wake_early',re:[/일찍\s?일어나는\s?(?:법|방법)|아침형\s?인간|기상.{0,8}(?:어떻게|방법|힘들)|아침에\s?못\s?일어/],
+  a:['일찍 일어나려면 사실 "일찍 자는 것"부터 바꿔야 해요.\n기상 시간을 한 번에 1시간 당기지 말고 15분씩 당기세요. 일어나자마자 햇빛을 보고 물 한 잔 마시면 몸이 더 빨리 깨어나요. 알람은 침대에서 손이 닿지 않는 곳에 두세요.'],
+  f:['🌅 아침 루틴 만들어줘']},
+ {id:'read_focus',re:[/책.{0,10}(?:집중|안\s?읽혀|졸려|진도)|독서.{0,8}(?:집중|방법|팁|어떻게)/],
+  a:['집중이 안 될 땐 읽는 양보다 환경을 바꿔보세요.\n• 휴대폰은 다른 방에 두기\n• 10분 타이머 맞추고 그 시간만 읽기\n• 재미없는 책은 과감히 바꾸기\n• 한 줄 메모 남기기(다음 날 이어 읽기가 쉬워요)'],
+  f:['📖 독서 루틴 만들어줘']},
+ {id:'read_amount',re:[/(?:한\s?달|1년|일\s?년|일년).{0,8}몇\s?권|책을?\s?얼마나/],
+  a:['권수보다 꾸준함이 중요해요. 하루 20분, 한 쪽에 2분 정도라고 치면 한 달에 300쪽짜리 책 1~2권 정도를 읽을 수 있어요.\n"하루 10분 펼치기"가 습관이 되면 권수는 자연스럽게 따라와요.'],
+  f:['📖 독서 루틴 만들어줘']},
+ {id:'study_focus',re:[/공부.{0,10}(?:집중|방법|팁|어떻게)|집중력|집중이?\s?안/],
+  a:['뽀모도로 방법을 추천해요. 25분 집중하고 5분 쉬는 걸 한 세트로, 4세트마다 길게 쉬어요.\n시작 전에 "이번 25분에 할 일"을 한 줄로 적어두면 바로 몰입하기 쉬워요. 휴대폰은 손 닿지 않는 곳에 두세요.'],
+  f:['✏️ 공부 루틴 짜줘']},
+ {id:'meditation_how',re:[/명상.{0,10}(?:어떻게|방법|처음|효과|왜)/],
+  a:['처음엔 5분 호흡 명상이면 충분해요. 편하게 앉아서 숨이 들어오고 나가는 감각에만 집중하고, 생각이 떠오르면 "생각"이라고 알아차린 뒤 다시 호흡으로 돌아오면 돼요.\n잡념이 드는 건 실패가 아니라 연습의 일부예요. 꾸준히 하면 스트레스와 집중력에 도움이 된다는 연구가 많아요.'],
+  f:['🧘 명상 습관 만들어줘']},
+ {id:'diet',re:[/다이어트|살\s?빼는\s?습관|식습관|체중\s?감량/],
+  a:['다이어트는 체중 숫자보다 "행동"을 목표로 잡는 게 오래가요. 예: 저녁 먹고 10분 걷기, 식사 전 물 한 컵, 야식 대신 따뜻한 차.\n너무 적게 먹는 극단적인 방법은 오래 못 가고 몸에도 무리가 돼요. 건강 문제가 있다면 전문가와 상의하세요.'],
+  f:['🏃 운동 습관 만들어줘','💧 물 마시기 습관 만들어줘']},
+ {id:'together',re:[/친구랑|같이\s?(?:하면|할\s?사람)|함께\s?하면|인증|스터디/],
+  a:['함께하면 효과가 커요. 누군가 지켜본다는 느낌(책임감)이 실행률을 높여줘요.\n친구와 매일 체크 결과를 짧게 공유하거나, 같은 시간에 각자 하고 "끝!"이라고 보내는 정도면 충분해요.'],
+  f:['보상을 주는 게 좋아?']},
+ {id:'start_small',re:[/작게\s?시작|어디서부터|뭐부터\s?(?:시작|해야)|처음엔\s?뭘|처음\s?시작/],
+  a:['딱 하나, 2분이면 끝나는 것부터 시작하세요. 이미 매일 하는 행동 뒤에 붙이면 더 좋아요.\n예: "아침에 양치하고 나면 스트레칭 2분". 1~2주 지켜지면 그다음에 늘리면 돼요.'],
+  f:['🏃 운동 습관 만들어줘','2분 규칙이 뭐야?']},
+ {id:'after_plan',re:[/7일\s?(?:이후|지나면|끝나면|다음)|플랜\s?(?:끝나면|이후|다음)/],
+  a:['7일 플랜이 끝나면 루틴은 그대로 이어지고 "유지 단계"가 돼요. 루틴 시간은 자동으로 바뀌지 않아요.\n충분히 익숙해졌다면 "독서 강도 올려줘"처럼 말해주세요. 기록을 보고 한 단계 올린 변경안을 보여드릴게요.'],
+  f:['언제 강도를 올려야 해?']},
+ {id:'app_dna',re:[/(?:습관\s?)?dna가?\s?(?:뭐|무슨)|dna\s?탭/],strong:true,
+  a:['습관 DNA는 기록으로 계산한 나의 실행 패턴이에요. 가장 잘 지켜지는 시간대로 유형(예: 저녁형 실행가)을 정하고, 꾸준함·회복력·부담 민감도 같은 특성을 점수로 보여줘요.\n나선 그래프의 점 하나는 하루의 기록이에요. 채워진 점은 성공, 빈 점은 실패예요.'],f:['📊 내 습관 분석해줘']},
+ {id:'app_exp',re:[/실험이?\s?(?:뭐|무슨)|ai\s?실험/],strong:true,
+  a:['실험은 루틴을 바꿨을 때 정말 나아지는지 7일 동안 지켜보는 기능이에요. 예를 들어 "30분 → 10분"으로 줄이면 "10분으로 줄이면 실행률이 오를 것이다"라는 가설로 실험이 시작돼요.\nDNA 탭에서 진행 상황을 볼 수 있어요.'],f:['습관 DNA가 뭐야?']},
+ {id:'app_backup',re:[/백업|데이터.{0,8}(?:어디|저장|옮기|사라)|다른\s?기기|폰\s?바꾸/],strong:true,
+  a:['기록은 지금 이 기기의 브라우저에만 저장돼요. 브라우저 기록을 지우면 사라질 수 있어요.\nAI 화면 오른쪽 위 설정 버튼에서 "백업 파일 저장"이나 "백업 코드 복사"로 보관하고, 다른 기기에서 "불러오기"로 옮길 수 있어요.']},
+ {id:'is_ai',re:[/진짜\s?ai|진짜\s?인공지능|너\s?(?:ai|인공지능)|gpt|챗gpt|사람이야/],strong:true,
+  a:['솔직하게 말씀드리면, 지금 버전은 인터넷 없이 이 기기 안에서 동작하는 규칙 기반 코치예요. 말을 분석해서 의도와 조건을 뽑고, 기록을 계산해서 답해요.\n실제 AI 모델과 연결하도록 설계되어 있어서, 나중에 연결하면 더 자유로운 대화가 가능해져요.']}
+];
+function matchQA(e){
+  const t=e.text,raw=(e.raw||'').trim();const isQ=QA_Q.test(t)||/\?\s*$/.test(raw);
+  let best=null;
+  for(const q of QA){const sc=q.re.reduce((n,re)=>n+(re.test(t)?1:0),0);if(!sc)continue;if(!isQ&&!q.strong)continue;if(!best||sc>best.sc)best={q,sc};}
+  return best?best.q:null;
+}
+
+/* ---------- NLU: intent classification ---------- */
+const RX={
+  greet:/^(안녕|하이|헬로|hi|hello|ㅎㅇ|반가워|반갑)/,
+  help:/너는?\s?누구|넌\s?뭐|뭘\s?할\s?수|뭐\s?할\s?수|할\s?수\s?있는\s?(?:게|거|일)|기능|사용법|도움말|어떻게\s?써/,
+  off:/날씨|기온|미세먼지|우산|주식|코인|비트코인|투자|환율|로또|치킨|맛집|배달|메뉴\s?추천|뭐\s?먹|영화|드라마|뉴스|정치|선거|대통령|연예|아이돌|노래\s?추천|게임\s?추천|번역|여행지|주가|부동산|축구|야구|경기\s?결과|몇\s?시야|지금\s?몇\s?시|연애|소개팅|숙제\s?해|코드\s?짜/,
+  weekly:/주간|위클리|(?:이번\s?주|지난\s?주|한\s?주|일주일).{0,8}(?:리포트|보고|정리|요약|어땠|돌아|결과|성과|리뷰)/,
+  analyze:/분석|패턴|성공률|통계|진단|평가해|돌아봐|(?:습관|루틴)\s?(?:어때|어떤가|상태)|잘\s?(?:하고|되고)\s?있|어떤\s?시간|약점|강점/,
+  del:/삭제|지워|지우|없애|그만\s?(?:할|하고|둘|하자|할래|해)|빼\s?줘|빼버|안\s?할래|포기할래|중단/,
+  change:/바꿔|바꾸|바꿀|변경|옮겨|옮기|조정|줄여|줄이|늘려|늘리|낮춰|낮추|높여|높이|수정|대신|(?:으로|로)\s?(?:해\s?줘|해|하자|할래|부탁|가자|맞춰)/,
+  strong:/만들|짜\s?(?:줘|주|볼|봐|줄)|시작|설계|습관을?\s?(?:들이|기르|잡)|루틴\s?(?:하나|좀|짜)|새로/,
+  soft:/하고\s?싶|해\s?보고\s?싶|해보고|싶어|싶은데|원해|하려고|해볼까|들이고|기르고|길러|추천해|도와\s?줘|계획/,
+  add:/추가|하나\s?더|더\s?넣|넣어\s?줘|같이\s?하고/,
+  lower:/쉽게|쉬운\s?(?:걸|거|버전)|가볍게|가벼운|부담\s?(?:없|적|줄|돼|되|스러)|난이도\s?(?:를\s?)?(?:낮|내려)|줄여|줄이|낮춰|낮추|너무\s?(?:힘들|어려|빡세|길|많)|힘들어|벅차|버거/,
+  higher:/어렵게|난이도\s?(?:를\s?)?(?:높|올)|늘려|늘리|높여|높이|강도\s?(?:를\s?)?(?:높|올)|더\s?(?:길게|많이|빡세게|세게|오래)|레벨\s?업|업그레이드|너무\s?쉬|쉬워|도전|올려/,
+  coachStrong:/꾸준|작심삼일|동기|의욕|미루|미뤄|포기|어떻게\s?하면|팁|조언|힘들|지쳐|어려워|안\s?돼|못\s?하겠|게을|귀찮|실행이?\s?어려|자꾸/,
+  coach:/습관|루틴|꾸준|작심삼일|동기|의욕|미루|미뤄|포기|어떻게\s?하면|팁|조언|힘들|지쳐|어려워|안\s?돼|못\s?하겠|게을|귀찮|실행이?\s?어려|자꾸/
+};
+const findByKey=(s,k)=>s.habits.find(h=>h.key===k)||null;
+function contextHabit(s){
+  const h=s.meta&&s.meta.lastHabitId&&s.habits.find(x=>x.id===s.meta.lastHabitId);
+  if(h)return h;return s.habits.length===1?s.habits[0]:null;
+}
+function classify(e,s){
+  const t=e.text;const existing=e.habitKey?findByKey(s,e.habitKey):null;
+  const ctx=existing||(!e.habitKey?contextHabit(s):null);
+  const R=(intent,confidence,x={})=>Object.assign({intent,confidence,target:ctx},x);
+  if(!t)return R('UNCLEAR',0);
+  const pend=s.meta&&s.meta.pending;const pm=pend&&s.aiMessages.find(x=>x.id===pend.msgId);const hasPend=!!(pm&&!pm.used);
+  const noEnt=!e.habitKey&&!e.customName&&!e.time&&!e.duration&&!e.days;
+  if(/되돌려|되돌리|원래대로|롤백|방금.{0,8}취소|아까.{0,8}취소|다시\s?돌려/.test(t))return R('UNDO_CHANGE',.9);
+  if(hasPend&&pend.intent==='CREATE_HABIT'&&!e.habitKey&&!e.customName&&!e.outcome&&(e.time||e.duration||e.days||e.difficulty))return R('REVISE_PROPOSAL',.9,{pending:pend});
+  if(hasPend&&noEnt&&t.length<=16&&/^(응|웅|어\s|ㅇㅇ|ㅇㅋ|오케이|ok|okay|넹|네|넵|예|좋아|좋네|좋습니다|그래|그렇게|그걸로|콜|ㄱㄱ|고고|해줘|해주세요|추가해|변경해|바꿔줘|진행|반영|오키|굿|good)/.test(t))return R('CONFIRM_PROPOSAL',.93,{pending:pend});
+  if(hasPend&&noEnt&&t.length<=16&&/^(아니|아냐|ㄴㄴ|싫어|취소|됐어|안\s?할래|그만|노|괜찮아|패스|별로)/.test(t))return R('CANCEL_PROPOSAL',.93,{pending:pend});
+  if(s.meta&&s.meta.lastWhy&&!e.habitKey&&t.length<=20&&/^(왜|이유|근거|어째서|왜요|왜\s?그)|왜\s?\d+\s?분|어떻게\s?정한|무슨\s?근거/.test(t))return R('EXPLAIN',.9);
+  if(RX.greet.test(t)&&t.length<14)return R('GENERAL_HABIT_CHAT',.92,{sub:'greet'});
+  if(RX.help.test(t)&&!e.habitKey)return R('GENERAL_HABIT_CHAT',.9,{sub:'help'});
+  const strong=RX.strong.test(t),soft=RX.soft.test(t),change=RX.change.test(t),add=RX.add.test(t);
+  if(!(e.outcome&&/오늘|어제|그제/.test(t))&&!/(?:만들어|짜|바꿔|변경|추가|삭제|옮겨|줄여|늘려)\s?(?:줘|주세요|줄래)/.test(t)){const qa=matchQA(e);if(qa)return R('GENERAL_HABIT_CHAT',.86,{sub:'qa',qa});}
+  if(RX.off.test(t)&&!e.outcome&&!(e.habitKey&&strong))return R('OUT_OF_SCOPE',.95);
+  if(RX.weekly.test(t))return R('WEEKLY_REPORT',.94);
+  if(RX.analyze.test(t))return R('ANALYZE_HABITS',.94);
+  if(RX.del.test(t)&&!e.outcome)return R('DELETE_HABIT',existing?.93:.6);
+  if(e.outcome==='fail')return R('FAIL_ROUTINE',existing?.95:ctx?.82:.6);
+  if(e.outcome==='done'&&!change&&!strong)return R('COMPLETE_ROUTINE',existing?.94:.75);
+  if(e.goal&&!strong)return R('GENERAL_HABIT_CHAT',.88,{sub:'goal'});
+  if(e.habitKey&&!existing&&(strong||soft||change||e.difficulty||e.struggle||e.time||e.duration||e.days))return R('CREATE_HABIT',strong?.96:.87);
+  if(!e.habitKey&&e.customName&&(strong||soft))return R('CREATE_HABIT',strong?.88:.8,{sub:'custom'});
+  if(existing&&strong&&!change&&!add)return R('CREATE_HABIT',.9,{sub:'redesign'});
+  if(ctx){
+    if(add&&(e.activity||e.duration||e.time))return R('ADD_ROUTINE',.88);
+    if(e.duration&&(change||e.duration.explicitTarget||RX.lower.test(t)||RX.higher.test(t)||soft))return R('CHANGE_DURATION',existing?.94:.84);
+    if(e.time&&(change||soft||/할래|하자|할게|하면|해야/.test(t)))return R('CHANGE_TIME',e.time.explicit?.94:.86);
+    if(e.days&&(change||soft||/할래|하자|만\s/.test(t)))return R('MODIFY_ROUTINE',.88,{sub:'days'});
+    if(e.activity&&(change||/대신/.test(t)))return R('MODIFY_ROUTINE',.86,{sub:'activity'});
+    if(RX.higher.test(t)&&(change||/싶|줘|올려|늘려/.test(t)))return R('INCREASE_DIFFICULTY',.88);
+    if(RX.lower.test(t)&&(change||e.habitKey||/줘|싶/.test(t)))return R('LOWER_DIFFICULTY',.88);
+    if(change)return R('MODIFY_ROUTINE',.62,{sub:'ask'});
+  }
+  if(change&&!ctx)return R('MODIFY_ROUTINE',.5,{sub:'which',target:null});
+  if((strong||soft)&&/습관|루틴/.test(t)&&!e.habitKey)return R('CREATE_HABIT',.6,{sub:'which'});
+  if(RX.coachStrong.test(t)||(RX.coach.test(t)&&!existing))return R('GENERAL_HABIT_CHAT',.8,{sub:'coach'});
+  if(existing)return R('GENERAL_HABIT_CHAT',.7,{sub:'status'});
+  if(e.habitKey)return R('CREATE_HABIT',.62,{sub:'confirm'});
+  return R('UNCLEAR',.3);
+}
+
+/* ---------- Analytics (derived from routineLogs) ---------- */
+const cmpDesc=(a,b)=>a.date===b.date?(b.time||'').localeCompare(a.time||''):b.date.localeCompare(a.date);
+function computeAnalytics(s,now=new Date()){
+  const L=s.routineLogs;const rate=(d,t)=>t?Math.round(d/t*100):null;const T=ymd(now);
+  const done=L.filter(l=>l.status==='done').length;
+  const byHabit=s.habits.map(h=>{const hl=L.filter(l=>l.habitId===h.id).sort(cmpDesc);const d=hl.filter(l=>l.status==='done').length;let cf=0;for(const l of hl){if(l.status==='fail')cf++;else break;}
+    return {habitId:h.id,name:h.name,icon:h.icon,color:h.color,done:d,total:hl.length,rate:rate(d,hl.length),consecutiveFails:cf,lastLogId:hl[0]?hl[0].id:null};});
+  const agg=keyFn=>{const m={};L.forEach(l=>{const k=keyFn(l);if(k==null)return;m[k]=m[k]||{done:0,total:0};m[k].total++;if(l.status==='done')m[k].done++;});Object.values(m).forEach(v=>v.rate=rate(v.done,v.total));return m;};
+  const byHour=agg(l=>l.time?+l.time.split(':')[0]:null);const byBucket=agg(l=>l.time?bucketOf(l.time):null);const byDay=agg(l=>dayOf(l.date));
+  let bestHour=null;Object.entries(byHour).forEach(([h,v])=>{if(v.total<3)return;if(!bestHour||v.rate>bestHour.rate||(v.rate===bestHour.rate&&v.total>bestHour.total))bestHour={hour:+h,...v};});
+  let bestBucket=null;Object.entries(byBucket).forEach(([b,v])=>{if(v.total<3)return;if(!bestBucket||v.rate>bestBucket.rate)bestBucket={name:b,...v};});
+  let hardestDay=null;Object.entries(byDay).forEach(([d,v])=>{if(v.total<2)return;if(!hardestDay||v.rate<hardestDay.rate)hardestDay={day:d,...v};});
+  const reasons={};(s.failureReasons||[]).forEach(f=>{reasons[f.reason]=(reasons[f.reason]||0)+1;});
+  const topKey=Object.keys(reasons).sort((a,b)=>reasons[b]-reasons[a])[0];
+  let streak=0;{let d=new Date(now);const has=x=>L.some(l=>l.date===x&&l.status==='done');if(!has(ymd(d)))d=addDays(d,-1);for(let i=0;i<120&&has(ymd(d));i++){streak++;d=addDays(d,-1);}}
+  const win=(a,b)=>{const from=ymd(addDays(now,-b)),to=ymd(addDays(now,-a));const w=L.filter(l=>l.date>=from&&l.date<=to);const d=w.filter(l=>l.status==='done').length;return {done:d,total:w.length,rate:rate(d,w.length)};};
+  const week=win(0,6),prevWeek=win(7,13);
+  const dk=dayOf(T);const todayRs=s.routines.filter(r=>r.days.includes(dk));
+  const todayDone=todayRs.filter(r=>L.some(l=>l.routineId===r.id&&l.date===T&&l.status==='done')).length;
+  const last14=new Set(L.filter(l=>l.status==='done'&&l.date>=ymd(addDays(now,-13))).map(l=>l.date)).size;
+  let rec=0,recN=0;s.habits.forEach(h=>{const hl=L.filter(l=>l.habitId===h.id).sort((a,b)=>-cmpDesc(a,b));for(let i=0;i<hl.length-1;i++)if(hl[i].status==='fail'){recN++;if(hl[i+1].status==='done')rec++;}});
+  const mins=s.routines.filter(r=>r.duration).map(r=>r.duration);
+  return {total:L.length,done,rate:rate(done,L.length),byHabit,byHour,byBucket,byDay,bestHour,bestBucket,hardestDay,reasons,
+    topReason:topKey?{key:topKey,label:REASONS[topKey]?REASONS[topKey].label:topKey,count:reasons[topKey]}:null,
+    streak,week,prevWeek,today:{total:todayRs.length,done:todayDone},
+    consistency:Math.round(last14/14*100),recovery:recN?Math.round(rec/recN*100):null,
+    avgDuration:mins.length?Math.round(mins.reduce((a,b)=>a+b,0)/mins.length):null};
+}
+
+/* ---------- Action Handler: the only code that mutates state ---------- */
+const resolveHabit=(s,ref)=>{if(!ref)return null;const r=String(ref);return s.habits.find(h=>h.id===r||h.name===r||h.key===r)||null;};
+const routinesOf=(s,h)=>s.routines.filter(r=>r.habitId===h.id).sort((a,b)=>a.time.localeCompare(b.time));
+const primaryOf=(s,h)=>routinesOf(s,h).filter(r=>!r.custom);
+function suggestLower(c){return c>=20?10:c>10?10:c>5?5:Math.max(2,c-2);}
+function suggestHigher(c){return c<10?10:c<20?20:c<30?30:c+15;}
+function resolveDate(a,now=new Date()){if(a.date)return a.date;return ymd(addDays(now,a.dateOffset||0));}
+const SCHEMA={CREATE_HABIT:['habit'],ADD_ROUTINE:['routine'],MODIFY_ROUTINE:['habitRef','changes'],DELETE_HABIT:['habitRef'],COMPLETE_ROUTINE:[],FAIL_ROUTINE:[],
+  CHANGE_TIME:['habitRef','time'],CHANGE_DURATION:['habitRef','duration'],LOWER_DIFFICULTY:['habitRef'],INCREASE_DIFFICULTY:['habitRef'],
+  ANALYZE_HABITS:['report'],WEEKLY_REPORT:['report'],SET_GOAL:['goal'],START_EXPERIMENT:['experiment'],UNDO_LOG:['logId'],RECORD_NUDGE:['habitId'],RESTORE:[],UPDATE_HABIT:['habitRef','changes'],END_EXPERIMENT:['experimentId']};
+const H={
+  CREATE_HABIT(s,a,ch){
+    const h=a.habit;const ex=s.habits.find(x=>(h.key&&x.key===h.key)||x.name===h.name);let id;
+    if(ex){Object.assign(ex,h,{id:ex.id,createdAt:ex.createdAt,redesignedAt:ymd(new Date())});s.routines=s.routines.filter(r=>r.habitId!==ex.id);id=ex.id;
+      ch.push({kind:'update',text:`습관 재설계: ${h.icon} ${h.name} (${DIFF_KO[h.difficulty]})`,tab:'routines',id});}
+    else{id=uid('h');s.habits.unshift(Object.assign({id,createdAt:ymd(new Date())},h));ch.push({kind:'add',text:`습관 생성: ${h.icon} ${h.name} (${DIFF_KO[h.difficulty]})`,tab:'routines',id});}
+    if(h.plan&&h.plan.length)ch.push({kind:'add',text:`${h.plan.length}일 루틴 플랜 생성`,tab:'routines',id});
+    ch.push({kind:'update',text:'분석 · 습관 DNA에 새 습관 반영',tab:'analytics',id});
+    s.meta.lastHabitId=id;
+  },
+  ADD_ROUTINE(s,a,ch){
+    const h=resolveHabit(s,a.habitRef||a.routine.habitId);if(!h)throw new Error('habit not found');
+    const r=Object.assign({id:uid('r'),habitId:h.id,days:WEEK.slice(),duration:null},a.routine,{habitId:h.id});
+    s.routines.push(r);ch.push({kind:'add',text:`오늘 루틴 추가: ${r.title} · ${fmtTime(r.time)}`,tab:'today',id:r.id});s.meta.lastHabitId=h.id;
+  },
+  CHANGE_TIME(s,a,ch){
+    const h=resolveHabit(s,a.habitRef);const rs=routinesOf(s,h);if(!rs.length)return;
+    const delta=toMin(a.time)-toMin(rs[0].time);if(!delta)return;
+    rs.forEach(r=>{const o=r.time;r.time=fromMin(toMin(r.time)+delta);ch.push({kind:'update',text:`${r.title}: ${fmtTime(o)} → ${fmtTime(r.time)}`,tab:'today',id:r.id});});
+    ch.push({kind:'update',text:`${h.name} 일정 갱신`,tab:'routines',id:h.id});s.meta.lastHabitId=h.id;
+  },
+  CHANGE_DURATION(s,a,ch){
+    const h=resolveHabit(s,a.habitRef);const db=dbOf(h);const to=clamp(Math.round(a.duration),1,240);
+    primaryOf(s,h).forEach(r=>{if(r.duration==null||r.duration===to)return;const from=r.duration;r.duration=to;r.title=db.unit==='min'?titleOf(db,to,h.activity):r.title.replace(/\d+분/,to+'분');
+      ch.push({kind:'update',text:`${r.title}: ${from}분 → ${to}분`,tab:'today',id:r.id});});
+    if(db.unit==='min'){h.plan=buildPlan(db,to,h.activity);const nd=to<=db.levels.beginner?'beginner':to<=db.levels.intermediate?'intermediate':'advanced';
+      if(nd!==h.difficulty){ch.push({kind:'update',text:`난이도: ${DIFF_KO[h.difficulty]} → ${DIFF_KO[nd]}`,tab:'routines',id:h.id});h.difficulty=nd;}
+      ch.push({kind:'update',text:`7일 플랜 재계산 (${to}분 기준)`,tab:'routines',id:h.id});}
+    s.meta.lastHabitId=h.id;
+  },
+  LOWER_DIFFICULTY(s,a,ch){
+    const h=resolveHabit(s,a.habitRef);const p=primaryOf(s,h);
+    if(h.unit==='min'&&p[0]&&p[0].duration){H.CHANGE_DURATION(s,{habitRef:h.id,duration:a.duration||suggestLower(p[0].duration)},ch);}
+    else{const rs=routinesOf(s,h);if(rs.length>1){const r=rs[rs.length-1];s.routines=s.routines.filter(x=>x!==r);ch.push({kind:'remove',text:`루틴 줄이기: ${r.title} 제외`,tab:'today',id:h.id});}
+      const i=LEVELS.indexOf(h.difficulty);if(i>0){ch.push({kind:'update',text:`난이도: ${DIFF_KO[h.difficulty]} → ${DIFF_KO[LEVELS[i-1]]}`,tab:'routines',id:h.id});h.difficulty=LEVELS[i-1];}}
+    s.meta.lastHabitId=h.id;
+  },
+  INCREASE_DIFFICULTY(s,a,ch){
+    const h=resolveHabit(s,a.habitRef);const p=primaryOf(s,h);const db=dbOf(h);
+    if(h.unit==='min'&&p[0]&&p[0].duration)H.CHANGE_DURATION(s,{habitRef:h.id,duration:a.duration||suggestHigher(p[0].duration)},ch);
+    else if(db.extra){const rs=routinesOf(s,h);const base=toMin(rs[0]?rs[0].time:db.time);const r={id:uid('r'),habitId:h.id,title:db.extra.title,time:fromMin(base+db.extra.offset),days:rs[0]?rs[0].days:WEEK.slice(),duration:db.extra.duration};
+      s.routines.push(r);ch.push({kind:'add',text:`루틴 추가: ${r.title} · ${fmtTime(r.time)}`,tab:'today',id:r.id});
+      const i=LEVELS.indexOf(h.difficulty);if(i<2){ch.push({kind:'update',text:`난이도: ${DIFF_KO[h.difficulty]} → ${DIFF_KO[LEVELS[i+1]]}`,tab:'routines',id:h.id});h.difficulty=LEVELS[i+1];}}
+    s.meta.lastHabitId=h.id;
+  },
+  MODIFY_ROUTINE(s,a,ch){
+    const h=resolveHabit(s,a.habitRef);const c=a.changes||{};const db=dbOf(h);
+    if(c.days){routinesOf(s,h).forEach(r=>{r.days=c.days.slice();});ch.push({kind:'update',text:`${h.name} 요일: ${fmtDays(c.days)}`,tab:'routines',id:h.id});}
+    if(c.activity&&db.unit==='min'){h.activity=c.activity;const p=primaryOf(s,h);p.forEach(r=>{r.title=titleOf(db,r.duration,c.activity);ch.push({kind:'update',text:`루틴 변경: ${r.title}`,tab:'today',id:r.id});});
+      h.plan=buildPlan(db,p[0]?p[0].duration:db.levels.beginner,c.activity);ch.push({kind:'update',text:'7일 플랜 재구성',tab:'routines',id:h.id});}
+    if(c.title&&c.routineId){const r=s.routines.find(x=>x.id===c.routineId);if(r){r.title=c.title;ch.push({kind:'update',text:`루틴 이름: ${c.title}`,tab:'today',id:r.id});}}
+    s.meta.lastHabitId=h.id;
+  },
+  DELETE_HABIT(s,a,ch){
+    const h=resolveHabit(s,a.habitRef);const n=s.routines.filter(r=>r.habitId===h.id).length;
+    s.habits=s.habits.filter(x=>x!==h);s.routines=s.routines.filter(r=>r.habitId!==h.id);
+    ch.push({kind:'remove',text:`습관 삭제: ${h.icon} ${h.name} (루틴 ${n}개)`,tab:'routines'});if(s.meta.lastHabitId===h.id)s.meta.lastHabitId=null;
+  },
+  COMPLETE_ROUTINE(s,a,ch){logOutcome(s,a,ch,'done');},
+  FAIL_ROUTINE(s,a,ch){logOutcome(s,a,ch,'fail');},
+  UNDO_LOG(s,a,ch){const l=s.routineLogs.find(x=>x.id===a.logId);if(!l)return;s.routineLogs=s.routineLogs.filter(x=>x!==l);s.failureReasons=s.failureReasons.filter(f=>f.logId!==l.id);ch.push({kind:'log',text:`기록 취소: ${l.title}`,tab:'today',id:l.routineId});},
+  ANALYZE_HABITS(s,a,ch){s.analytics.lastReport=a.report;ch.push({kind:'update',text:'AI 분석 리포트 갱신',tab:'analytics',id:'report'});ch.push({kind:'update',text:'습관 DNA 프로필 재계산',tab:'dna',id:'persona'});},
+  WEEKLY_REPORT(s,a,ch){s.analytics.weeklyReport=a.report;ch.push({kind:'update',text:'주간 리포트 생성',tab:'analytics',id:'weekly'});},
+  SET_GOAL(s,a,ch){if(s.user.goal===a.goal)return;s.user.goal=a.goal;ch.push({kind:'update',text:`현재 목표: ${a.goal}`,tab:'today',id:'goal'});},
+  START_EXPERIMENT(s,a,ch){const x=Object.assign({id:uid('x'),startDate:ymd(new Date()),length:7,status:'running'},a.experiment);s.experiments.unshift(x);ch.push({kind:'add',text:`AI 실험 시작: ${x.title}`,tab:'dna',id:x.id});},
+  UPDATE_HABIT(s,a,ch){
+    const h=resolveHabit(s,a.habitRef);const c=a.changes||{};
+    if(c.icon&&c.icon!==h.icon){h.icon=c.icon;ch.push({kind:'update',text:`아이콘 변경: ${c.icon} ${h.name}`,tab:'routines',id:h.id});}
+    if(c.name&&c.name!==h.name){const old=h.name;h.name=c.name;
+      if(!HABIT_DB[h.key]){h.activity=c.name;const db=dbOf(h);const p=primaryOf(s,h);p.forEach(r=>{if(r.duration)r.title=titleOf(db,r.duration,c.name);});
+        h.plan=buildPlan(db,(p[0]&&p[0].duration)||10,c.name);if(h.goal)h.goal=h.goal.split(old).join(c.name);}
+      ch.push({kind:'update',text:`이름 변경: ${old} → ${c.name}`,tab:'routines',id:h.id});}
+    s.meta.lastHabitId=h.id;
+  },
+  END_EXPERIMENT(s,a,ch){const x=s.experiments.find(e=>e.id===a.experimentId);if(!x||x.status==='done')return;x.status='done';x.result=a.result||null;x.endDate=ymd(new Date());
+    ch.push({kind:'update',text:`실험 종료: ${x.title}`,tab:'dna',id:x.id});},
+  RESTORE(s,a,ch){const u=s.meta.undo;if(!u)return;s.habits=u.data.habits;s.routines=u.data.routines;s.experiments=u.data.experiments;s.user=u.data.user;s.meta.undo=null;
+    ch.push({kind:'update',text:`되돌리기: ${u.label}`,tab:'routines',id:'*'});ch.push({kind:'update',text:'오늘 루틴 · 분석 다시 계산',tab:'today',id:'*'});},
+  RECORD_NUDGE(s,a){s.meta.nudged=s.meta.nudged||{};s.meta.nudged[a.habitId]=a.logId;}
+};
+function logOutcome(s,a,ch,status){
+  let h=a.habitRef?resolveHabit(s,a.habitRef):null;let r=a.routineId?s.routines.find(x=>x.id===a.routineId):null;
+  if(r&&!h)h=s.habits.find(x=>x.id===r.habitId);if(!h)throw new Error('habit not found');
+  const rs=routinesOf(s,h);let date=resolveDate(a);
+  const has=(rid,d)=>s.routineLogs.find(l=>l.routineId===rid&&l.date===d);
+  if(!r){
+    if(status==='done'){r=rs.find(x=>x.days.includes(dayOf(date))&&!has(x.id,date))||rs.find(x=>!has(x.id,date))||rs[0];}
+    else{for(let i=0;i<21;i++){const d=ymd(addDays(parseYmd(resolveDate(a)),-i));const c=rs.find(x=>x.days.includes(dayOf(d))&&!has(x.id,d))||(i===0?rs.find(x=>!has(x.id,d)):null);if(c){r=c;date=d;break;}}if(!r)r=rs[0];}
+  }
+  if(!r)throw new Error('no routine');
+  const ex=has(r.id,date);
+  if(ex){if(ex.status===status){ch.push({kind:'log',text:`이미 기록됨: ${r.title}`,tab:'today',id:r.id});return;}
+    s.routineLogs=s.routineLogs.filter(l=>l!==ex);s.failureReasons=s.failureReasons.filter(f=>f.logId!==ex.id);}
+  const log={id:uid('l'),routineId:r.id,habitId:h.id,habitName:h.name,title:r.title,date,time:r.time,status,reason:status==='fail'?(a.reason||'unknown'):null};
+  s.routineLogs.push(log);
+  const when=date===ymd(new Date())?'오늘':date===ymd(addDays(new Date(),-1))?'어제':`${+date.slice(5,7)}/${+date.slice(8)}`;
+  if(status==='done')ch.push({kind:'add',text:`완료 기록: ${h.icon} ${r.title} (${when})`,tab:'today',id:r.id});
+  else{const rk=a.reason||'unknown';s.failureReasons.push({id:uid('f'),logId:log.id,habitId:h.id,habitName:h.name,reason:rk,date});
+    ch.push({kind:'log',text:`실패 기록: ${h.icon} ${r.title} (${when})`,tab:'today',id:r.id});
+    ch.push({kind:'remove',text:`실패 원인 '${REASONS[rk]?REASONS[rk].label:'기타'}' +1`,tab:'analytics',id:'reason-'+rk});
+    s.meta.reasonBump={reason:rk,at:Date.now()};}
+  ch.push({kind:'update',text:'성공률 · 요일 패턴 재계산',tab:'analytics',id:'kpi'});
+  s.meta.lastHabitId=h.id;
+}
+const ActionHandler={
+  validate(a){if(!a||typeof a!=='object'||!SCHEMA[a.type])return false;return SCHEMA[a.type].every(k=>a[k]!=null);},
+  apply(s,actions){
+    const ch=[];
+    for(const a of actions||[]){
+      if(!this.validate(a)){ch.push({kind:'log',text:`무시된 Action: ${a&&a.type}`,error:true});continue;}
+      try{H[a.type](s,a,ch);}catch(err){ch.push({kind:'log',text:`실행 실패: ${a.type} (${err.message})`,error:true});}
+    }
+    const keep={lastReport:s.analytics&&s.analytics.lastReport,weeklyReport:s.analytics&&s.analytics.weeklyReport};
+    s.analytics=Object.assign(computeAnalytics(s),keep);
+    return ch;
+  }
+};
+
+/* ---------- Mock AI: response builders ---------- */
+const STEPS={create:['🧠 목표 분석 중...','🧩 루틴 설계 중...','✨ 맞춤 루틴 설계 완료!'],modify:['🧠 요청 이해 중...','🔧 루틴 조정 중...','✨ 앱에 반영 완료!'],
+  log:['🧠 상황 이해 중...','🗂 실행 기록 저장 중...','✨ 분석에 반영 완료!'],analyze:['📥 실행 기록 불러오는 중...','📊 패턴 분석 중...','💡 인사이트 정리 중...'],chat:['🧠 생각 중...']};
+const DEFAULT_SUGGEST=['🏃 운동 습관 만들어줘','📖 독서 루틴 만들어줘','🌅 아침 루틴 만들어줘','📊 내 습관 분석해줘','🔄 운동 루틴을 더 쉽게 바꿔줘','❓ 습관 만드는 데 얼마나 걸려?','❓ 하루 빼먹으면 어떡해?'];
+const HABIT_CHIPS=['🏃 운동 습관 만들어줘','📖 독서 루틴 만들어줘','🌙 수면 습관 만들어줘','💧 물 마시기 습관 만들어줘','✏️ 공부 루틴 짜줘','🧘 명상 습관 만들어줘','🌅 아침 루틴 만들어줘'];
+const INTRO={beginner:['좋아요. 처음에는 부담을 낮춰서 시작해볼게요.','좋아요. 처음부터 무리하지 않도록 아주 작게 시작해볼게요.'],
+  intermediate:['좋아요. 꾸준히 해낼 수 있는 강도로 설계해볼게요.','좋아요. 지금 리듬에서 한 단계 올라갈 수 있게 설계했어요.'],
+  advanced:['좋아요. 강도를 높여 설계했어요. 대신 회복일 신호도 함께 챙길게요.']};
+function empathy(t){
+  if(/미루|미뤄/.test(t))return '계속 미루게 되는 건 의지가 약해서가 아니라 시작이 무거워서인 경우가 많아요.';
+  if(/체력/.test(t))return '체력이 떨어졌다고 느낄수록 짧고 가벼운 움직임이 가장 효과적이에요.';
+  if(/작심삼일|포기/.test(t))return '작심삼일은 실패가 아니라 루틴이 너무 컸다는 신호예요.';
+  if(/힘든|힘들|부담|싫/.test(t))return '힘든 건 싫다는 마음, 아주 자연스러워요. 그래서 시작 장벽부터 낮출게요.';
+  return null;
+}
+const resp=(message,actions=[],ui={})=>({message,actions,ui});
+/* 루틴 추가·수정은 바로 적용하지 않고 확인 버튼을 거친다 */
+const ask=(r,q,label='변경하기')=>{r.ui.confirm={ask:q,label};return r;};
+const curDur=(s,h)=>{const p=primaryOf(s,h);return p[0]?p[0].duration:null;};
+function summaryOf(B){return B.db.unit==='min'?`${fmtDays(B.dys)} · ${fmtTime(B.t)} · ${B.d}분`:`${fmtDays(B.dys)} · ${fmtTime(B.t)}부터 · ${B.routines.length}단계`;}
+function habitChoice(s,fmt){return s.habits.map(h=>({label:`${h.icon} ${h.name}`,fill:fmt(h)}));}
+
+const B={
+  CREATE_HABIT(e,c,s){
+    if(c.sub==='which')return resp('어떤 습관을 만들어볼까요?\n아래에서 고르거나, 원하는 걸 편하게 말해주세요.',[],{steps:STEPS.chat,suggestions:HABIT_CHIPS});
+    const key=e.habitKey||customKey(e.customName),existing=findByKey(s,key);
+    const db=HABIT_DB[key]||(existing?dbOf(existing):customDb(e.customName));
+    const ex0=existing?routinesOf(s,existing)[0]:null;
+    const Bd=buildCreate(key,{db,difficulty:e.difficulty||'beginner',duration:e.duration?e.duration.target:null,time:e.time?e.time.time:(ex0?ex0.time:null),days:e.days||(ex0?ex0.days:null),activity:e.activity||(existing&&!HABIT_DB[key]?existing.activity:null),goal:e.goal});
+    const acts=Bd.actions.concat([{type:'SET_GOAL',goal:Bd.habit.goal}]);
+    const done=`좋아요. ${josa(db.name,'을/를')} 만들었어요. ${summaryOf(Bd)}로 시작해요.`;
+    if(c.sub==='confirm')return resp(`${db.icon} ${josa(db.name,'을/를')} 새 습관으로 만들까요?\n추천 구성: **${Bd.routines[0].title}** (${summaryOf(Bd)})`,[],{steps:STEPS.chat,
+      buttons:[{label:'이대로 만들기',primary:true,actions:acts,after:{message:done,cards:[{type:'plan',habitKey:key}],focus:'today'}},{label:'조건 직접 말하기',fill:`${db.name}을 평일 저녁 8시에 10분씩 하고 싶어`}]});
+    const L=[];const em=e.struggle?empathy(e.text):null;if(em)L.push(em);
+    if(c.sub==='custom')L.push(`'${e.customName}'${josa(e.customName,'은/는').slice(e.customName.length)} 기본 목록에 없는 습관이라 범용 루틴으로 설계했어요. 시간과 길이는 언제든 바꿀 수 있어요.`);
+    L.push(existing?`이미 있던 ${josa(db.name,'을/를')} 말씀하신 조건에 맞춰 다시 설계해봤어요. 지난 기록은 그대로 남아요.`:pick(INTRO[Bd.level]));
+    if(db.unit==='min')L.push(`**${Bd.routines[0].title}**부터 시작하는 7일 루틴을 설계했어요.`);
+    else L.push(`**${Bd.routines.map(r=>r.title.replace(/ \(250ml\)/,'')).join(' → ')}**, ${Bd.routines.length}단계로 된 7일 루틴을 설계했어요.`);
+    L.push(`📅 ${fmtDays(Bd.dys)} · ⏰ ${fmtTime(Bd.t)}${db.unit==='min'?` · ⏱ ${Bd.d}분`:''}`);
+    L.push('💡 '+pick(db.tip));
+    L.push('',existing?V('cfoot2',['이 설계로 바꾸려면 **[변경하기]**를 눌러주세요.','"응"이라고 답하거나 **[변경하기]**를 누르면 바로 바꿀게요.']):V('cfoot',['마음에 들면 **[추가하기]**를 눌러주세요. 그때 앱에 반영할게요.','"응"이라고 답하거나 **[추가하기]**를 누르면 바로 추가할게요.','시간이나 길이를 바꾸고 싶으면 "8시로", "15분으로"처럼 말해주세요. 괜찮으면 **[추가하기]**!']));
+    const alt=Bd.t>='18:00'?'오후 7시':'오전 8시';
+    const preview={type:'plan',name:db.name,icon:db.icon,difficulty:Bd.level,plan:Bd.habit.plan,routines:Bd.routines.map(r=>({time:r.time,title:r.title,days:r.days})),preview:true};
+    const after={message:`✨ ${josa(db.name,'을/를')} ${existing?'새 설계로 바꿨어요':'추가했어요'}. 오늘 탭과 루틴 탭에서 바로 확인할 수 있어요.`,focus:'today',
+      suggestions:[`${db.name} 시간을 ${alt}로 바꿔줘`,`${db.name} 루틴을 더 쉽게 바꿔줘`,'📊 내 습관 분석해줘']};
+    const A0=computeAnalytics(s);const bk0=A0.byBucket[bucketOf(Bd.t)];
+    const why=`${db.unit==='min'?`처음 7일은 '해냈다'는 경험이 가장 중요해서 ${Bd.d}분으로 시작하게 잡았어요. 플랜은 4일째부터 조금씩 늘어나요.`:`처음엔 단계를 적게 두고 익숙해지면 늘리는 방식으로 설계했어요.`}${bk0&&bk0.total>=5?` 시간은 ${fmtTime(Bd.t)}로 잡았는데, 지금까지 ${bucketOf(Bd.t)} 시간대 성공률은 ${bk0.rate}%예요.`:''}`;
+    return resp(L.join('\n'),[],{why,steps:STEPS.create,cards:[preview],
+      buttons:[{label:existing?'변경하기':'추가하기',primary:true,actions:acts,after},
+        {label:'조건 바꾸기',fill:`${db.name}을 평일 저녁 7시에 15분씩 하고 싶어`}],
+      suggestions:[`${db.name}을 저녁 7시에 15분씩 하고 싶어`,`더 가벼운 ${db.name} 루틴으로 짜줘`]});
+  },
+  ADD_ROUTINE(e,c,s){
+    const h=c.target;const db=dbOf(h);const rs=routinesOf(s,h);const last=rs[rs.length-1];
+    const d=e.duration?e.duration.target:(e.activity?5:null);const act=e.activity||'추가 루틴';
+    const title=d?`${d}분 ${act}`:act;const time=e.time?e.time.time:last?fromMin(toMin(last.time)+(last.duration||5)):db.time||'09:00';
+    return ask(resp(`좋아요. ${h.name}에 **${title}**${josa(title,'을/를').slice(title.length)} 추가했어요.\n⏰ ${fmtTime(time)} · ${fmtDays(last?last.days:null)}`,
+      [{type:'ADD_ROUTINE',habitRef:h.name,routine:{title,time,days:last?last.days:WEEK.slice(),duration:d,custom:true}}],{steps:STEPS.modify,focus:'today'}),
+      `${h.icon} ${h.name}에 이 루틴을 추가할까요?\n➕ **${title}**\n⏰ ${fmtTime(time)} · ${fmtDays(last?last.days:null)}`,'추가하기');
+  },
+  CHANGE_DURATION(e,c,s){
+    const h=c.target;
+    if(!h)return B.MODIFY_ROUTINE(e,Object.assign({},c,{sub:'which'}),s);
+    if(h.unit!=='min')return resp(`${josa(h.name,'은/는')} 시간 대신 횟수로 관리하고 있어요.\n루틴 개수를 조정해드릴까요?`,[],{steps:STEPS.chat,
+      buttons:[{label:'한 단계 가볍게',primary:true,actions:[{type:'LOWER_DIFFICULTY',habitRef:h.name}],after:{message:`좋아요. ${h.name} 루틴을 한 단계 줄였어요.`}},{label:'한 단계 늘리기',actions:[{type:'INCREASE_DIFFICULTY',habitRef:h.name}],after:{message:`좋아요. ${h.name} 루틴을 한 단계 늘렸어요.`}}]});
+    const cur=curDur(s,h),to=e.duration.target;
+    const rs=routinesOf(s,h);const tChange=e.time&&rs[0]&&rs[0].time!==e.time.time?e.time.time:null;
+    const dChange=e.days&&rs[0]&&e.days.join()!==rs[0].days.join()?e.days:null;
+    if(cur===to&&tChange)return B.CHANGE_TIME(e,c,s);
+    if(cur===to&&dChange)return B.MODIFY_ROUTINE(e,Object.assign({},c,{sub:'days'}),s);
+    if(cur===to){
+      if(e.duration.from&&e.duration.from>to)return ask(resp(`좋아요. 7일 동안 ${to}분 ${h.name}${josa(h.name,'을/를').slice(h.name.length)} 유지하는 실험을 시작했어요.`,[{type:'START_EXPERIMENT',experiment:{title:`${to}분 ${h.name} 7일 유지 실험`,habitId:h.id,hypothesis:`${to}분을 유지하면 ${e.duration.from}분보다 실행률이 높을 것이다`}}],{steps:STEPS.modify,focus:'dna'}),
+          `${h.name} 루틴은 이미 ${to}분이에요.\n${e.duration.from}분이 부담됐던 걸 반영해서, 7일 동안 ${to}분을 유지하는 실험을 시작할까요?`,'실험 시작');
+      return resp(`${h.name} 루틴은 이미 ${to}분으로 설정돼 있어요.\n지금 강도를 유지하면서 꾸준함부터 쌓아볼게요.`,[],{steps:STEPS.modify,suggestions:[`${h.name} 시간을 오후 7시로 바꿔줘`,'📊 내 습관 분석해줘']});}
+    const down=to<cur;
+    const msg=down?`좋아요. ${h.name} 시간을 ${cur}분에서 ${to}분으로 낮췄어요.\n지금은 꾸준히 실행하는 것이 더 중요해요.`:`좋아요. ${h.name} 시간을 ${cur}분에서 ${to}분으로 늘렸어요.\n처음 3일은 몸이 적응하는지 함께 지켜볼게요.`;
+    const acts=[{type:'CHANGE_DURATION',habitRef:h.name,duration:to}];
+    const extraQ=[],extraM=[];
+    if(tChange){acts.push({type:'CHANGE_TIME',habitRef:h.name,time:tChange});extraQ.push(`⏰ ${fmtTime(rs[0].time)} → **${fmtTime(tChange)}**`);extraM.push(`시작 시간은 ${josa(fmtTime(tChange),'으로/로')} 옮겼어요.`);}
+    if(dChange){acts.push({type:'MODIFY_ROUTINE',habitRef:h.name,changes:{days:dChange}});extraQ.push(`📅 ${fmtDays(rs[0].days)} → **${fmtDays(dChange)}**`);extraM.push(`요일은 ${fmtDays(dChange)}로 바꿨어요.`);}
+    if(down)acts.push({type:'START_EXPERIMENT',experiment:{title:`${to}분 ${h.name} 7일 실험`,habitId:h.id,hypothesis:`${to}분으로 줄이면 실행률이 올라갈 것이다`}});
+    const A1=computeAnalytics(s);const bh1=A1.byHabit.find(x=>x.habitId===h.id);
+    const facts=[bh1&&bh1.total>=3?`지금 ${h.name} 성공률은 ${bh1.rate}%`:null,A1.topReason?`실패 원인 1위는 '${A1.topReason.label}'`:null].filter(Boolean);
+    const why=down?`짧게라도 매일 하는 쪽이 길게 가끔 하는 것보다 습관으로 굳어지기 쉬워요.${facts.length?` ${facts.join('이고, ')}예요.`:''} 그래서 강도를 낮추는 게 맞다고 판단했어요.`:`최근 흐름이 괜찮아서 한 단계 올려도 된다고 봤어요. 3일 동안 놓치는 날이 생기면 다시 낮추는 걸 제안할게요.`;
+    return ask(resp([msg].concat(extraM).join('\n'),acts,{why,steps:STEPS.modify,focus:'today',suggestions:[`${h.name} 시간을 오후 6시로 바꿔줘`,'📊 내 습관 분석해줘']}),
+      [V('askDur',[`${h.icon} ${h.name} 루틴을 이렇게 바꿀까요?`,`${h.icon} ${h.name}, 이렇게 조정해볼까요?`,`${h.icon} ${h.name} 변경안이에요.`]),`⏱ ${cur}분 → **${to}분**`].concat(extraQ).concat(down?['지금은 꾸준히 실행하는 것이 더 중요해요.']:[]).join('\n'));
+  },
+  CHANGE_TIME(e,c,s){
+    const h=c.target;const t=e.time.time;const rs=routinesOf(s,h);
+    if(!rs.length)return resp(`${h.name}에 등록된 루틴이 없어요. 먼저 루틴을 만들어볼까요?`,[],{steps:STEPS.chat,suggestions:[`${h.name} 습관 만들어줘`]});
+    if(rs[0].time===t&&e.days&&e.days.join()!==rs[0].days.join())return B.MODIFY_ROUTINE(e,Object.assign({},c,{sub:'days'}),s);
+    if(rs[0].time===t)return resp(`${h.name} 루틴은 이미 ${fmtTime(t)}에 맞춰져 있어요.`,[],{steps:STEPS.modify});
+    const A=computeAnalytics(s);const bk=A.byBucket[bucketOf(t)];
+    const L=[rs.length>1?`좋아요. ${h.name} 루틴 ${rs.length}개를 ${fmtTime(t)}부터 시작하도록 함께 옮겼어요.`:`좋아요. ${h.name} 시간을 ${josa(fmtTime(t),'으로/로')} 변경했어요.`];
+    if(bk&&bk.total>=5&&A.rate!=null)L.push(bk.rate>=A.rate?`📊 지금까지 ${bucketOf(t)} 시간대 성공률이 ${bk.rate}%로 평균보다 높아서 잘 맞을 거예요.`:`📊 ${bucketOf(t)} 시간대 성공률은 ${bk.rate}%로 평균보다 낮아요. 첫 주는 시작 신호를 꼭 챙겨볼게요.`);
+    const Q=[V('askTime',[`${h.icon} ${h.name} 시간을 옮길까요?`,`${h.icon} ${h.name}, 이 시간으로 바꿔볼까요?`,`${h.icon} ${h.name} 시간 변경안이에요.`]),`⏰ ${fmtTime(rs[0].time)} → **${fmtTime(t)}**${rs.length>1?` (루틴 ${rs.length}개 함께 이동)`:''}`].concat(L.slice(1));
+    const dCh=e.days&&e.days.join()!==rs[0].days.join()?e.days:null;const tActs=[{type:'CHANGE_TIME',habitRef:h.name,time:t}];
+    if(dCh){tActs.push({type:'MODIFY_ROUTINE',habitRef:h.name,changes:{days:dCh}});Q.splice(2,0,`📅 ${fmtDays(rs[0].days)} → **${fmtDays(dCh)}**`);L[0]+=` 요일은 ${fmtDays(dCh)}로 바꿨어요.`;}
+    const whyT=bk&&bk.total>=5?`${bucketOf(t)} 시간대(${fmtTime(t)})의 지금까지 성공률은 ${bk.rate}%이고, 전체 평균은 ${A.rate}%예요. 그래서 ${bk.rate>=A.rate?'잘 맞을 거라고':'첫 주는 신경 써야 한다고'} 봤어요.`:`요청하신 시간이라 그대로 옮겼어요. 기록이 쌓이면 이 시간대 성공률을 알려드릴게요.`;
+    return ask(resp(L[0],tActs,{why:whyT,steps:STEPS.modify,focus:'today',suggestions:[`${h.name} 요일을 평일로 바꿔줘`,'📊 내 습관 분석해줘']}),Q.join('\n'));
+  },
+  LOWER_DIFFICULTY(e,c,s){
+    const h=c.target;
+    if(h.unit==='min'){const cur=curDur(s,h);if(cur<=2)return resp(`${h.name}는 이미 가장 가벼운 단계예요. 대신 시간대를 바꿔보는 건 어떨까요?`,[],{steps:STEPS.chat,suggestions:[`${h.name} 시간을 오후 6시로 바꿔줘`]});
+      const to=suggestLower(cur);
+      return ask(resp(`좋아요. ${h.name} 루틴을 한 단계 가볍게 바꿨어요.\n⏱ ${cur}분 → **${to}분**\n작게 성공하는 경험을 먼저 쌓고, 7일 뒤에 다시 조정해볼게요.`,
+        [{type:'LOWER_DIFFICULTY',habitRef:h.name,duration:to},{type:'START_EXPERIMENT',experiment:{title:`${to}분 ${h.name} 7일 실험`,habitId:h.id,hypothesis:`${to}분으로 줄이면 실행률이 올라갈 것이다`}}],{why:`최근 기록을 보면 지금 강도가 컨디션보다 높을 수 있어요. ${cur}분을 ${to}분으로 줄이면 시작 장벽이 낮아져서, 짧게라도 매일 하는 흐름을 먼저 만들 수 있어요.`,steps:STEPS.modify,focus:'today'}),
+        `${h.icon} ${h.name} 루틴을 한 단계 가볍게 바꿀까요?\n⏱ ${cur}분 → **${to}분** · 7일 실험도 함께 시작해요.`);}
+    const n=routinesOf(s,h).length;if(n<=1)return resp(`${h.name}는 이미 가장 작은 구성이에요.`,[],{steps:STEPS.chat});
+    return ask(resp(`좋아요. ${h.name} 루틴을 ${n}단계에서 ${n-1}단계로 줄였어요.\n익숙해지면 다시 늘려볼게요.`,[{type:'LOWER_DIFFICULTY',habitRef:h.name}],{steps:STEPS.modify,focus:'today'}),
+      `${h.icon} ${h.name} 루틴을 줄일까요?\n🧩 ${n}단계 → **${n-1}단계** (마지막 루틴 제외)`);
+  },
+  INCREASE_DIFFICULTY(e,c,s){
+    const h=c.target;
+    if(h.unit==='min'){const cur=curDur(s,h),to=suggestHigher(cur);
+      return ask(resp(`좋아요. ${h.name} 강도를 한 단계 올렸어요.\n⏱ ${cur}분 → **${to}분**\n힘들게 느껴지면 언제든 "다시 줄여줘"라고 말해주세요.`,[{type:'INCREASE_DIFFICULTY',habitRef:h.name,duration:to}],{steps:STEPS.modify,focus:'today'}),
+        `${h.icon} ${h.name} 강도를 한 단계 올릴까요?\n⏱ ${cur}분 → **${to}분**`);}
+    return ask(resp(`좋아요. ${h.name} 루틴에 한 단계를 더했어요.`,[{type:'INCREASE_DIFFICULTY',habitRef:h.name}],{steps:STEPS.modify,focus:'today'}),
+      `${h.icon} ${h.name} 루틴에 한 단계를 더할까요?`);
+  },
+  MODIFY_ROUTINE(e,c,s){
+    const h=c.target;
+    if(c.sub==='which'||!h){
+      if(!s.habits.length)return resp('아직 바꿀 루틴이 없어요. 먼저 습관을 하나 만들어볼까요?',[],{steps:STEPS.chat,suggestions:HABIT_CHIPS});
+      return resp('어떤 습관의 루틴을 바꿀까요?',[],{steps:STEPS.chat,buttons:habitChoice(s,x=>`${x.name} ${e.raw}`)});}
+    const rs0=routinesOf(s,h)[0];
+    if(c.sub==='days')return ask(resp(`좋아요. ${h.name} 루틴을 **${fmtDays(e.days)}**에 하도록 바꿨어요.`,[{type:'MODIFY_ROUTINE',habitRef:h.name,changes:{days:e.days}}],{steps:STEPS.modify,focus:'routines'}),
+      `${h.icon} ${h.name} 요일을 바꿀까요?\n📅 ${fmtDays(rs0?rs0.days:null)} → **${fmtDays(e.days)}**`);
+    if(c.sub==='activity')return ask(resp(`좋아요. ${h.name} 루틴을 **${josa(e.activity,'으로/로')}** 바꿨어요. 시간과 요일은 그대로예요.`,[{type:'MODIFY_ROUTINE',habitRef:h.name,changes:{activity:e.activity}}],{steps:STEPS.modify,focus:'today'}),
+      `${h.icon} ${h.name} 루틴 내용을 바꿀까요?\n🔄 ${h.activity||h.name} → **${e.activity}** (시간과 요일은 그대로)`);
+    return resp(`${h.name} 루틴의 어떤 부분을 바꿔볼까요?`,[],{steps:STEPS.chat,suggestions:[`${h.name} 시간을 오후 7시로 바꿔줘`,`${h.name} 루틴을 더 쉽게 바꿔줘`,`${h.name} 요일을 월수금으로 바꿔줘`,`${h.name} 습관 삭제해줘`]});
+  },
+  DELETE_HABIT(e,c,s){
+    const h=e.habitKey?findByKey(s,e.habitKey):null;
+    if(!h){if(e.habitKey)return resp(`삭제할 ${josa(e.habitName,'이/가')} 없어요.`,[],{steps:STEPS.chat});
+      return resp('어떤 습관을 삭제할까요?',[],{steps:STEPS.chat,buttons:habitChoice(s,x=>`${x.name} 습관 삭제해줘`)});}
+    const n=routinesOf(s,h).length;
+    return resp(`${h.icon} ${josa(h.name,'을/를')} 삭제할까요?\n루틴 ${n}개가 함께 사라지고, 지난 실행 기록은 분석용으로 남겨둘게요.`,[],{steps:STEPS.chat,
+      buttons:[{label:'삭제하기',danger:true,actions:[{type:'DELETE_HABIT',habitRef:h.name}],after:{message:`${josa(h.name,'을/를')} 삭제했어요. 필요하면 언제든 다시 만들어드릴게요.`}},{label:'유지할게요',after:{message:'좋아요. 그대로 둘게요.'}}]});
+  },
+  COMPLETE_ROUTINE(e,c,s){
+    const T=ymd(new Date());const h=e.habitKey?findByKey(s,e.habitKey):null;
+    if(!h){
+      const pend=s.routines.filter(r=>r.days.includes(dayOf(T))&&!s.routineLogs.some(l=>l.routineId===r.id&&l.date===T));
+      if(e.habitKey)return resp(`${josa(e.habitName,'은/는')} 아직 등록된 습관이 아니에요. 습관으로 만들어둘까요?`,[],{steps:STEPS.chat,suggestions:[`${e.habitName} 습관 만들어줘`]});
+      if(!pend.length)return resp('오늘 남은 루틴이 없어요. 오늘 할 일을 모두 마쳤네요! 🎉',[],{steps:STEPS.chat});
+      return resp('어떤 루틴을 완료했나요?',[],{steps:STEPS.chat,buttons:pend.slice(0,4).map(r=>{const hh=s.habits.find(x=>x.id===r.habitId);return {label:`${hh.icon} ${r.title}`,actions:[{type:'COMPLETE_ROUTINE',routineId:r.id,date:T}],after:{message:`🎉 ${r.title} 완료! 좋은 흐름이에요.`}};})});}
+    const A=computeAnalytics(s);const bh=A.byHabit.find(x=>x.habitId===h.id);const L=[V('done',[`🎉 좋아요! ${h.name} 완료를 기록했어요.`,`✅ ${h.name} 완료! 오늘도 한 칸 채웠어요.`,`👏 ${h.name} 해냈네요. 기록해둘게요.`])];
+    const lastF=[...s.routineLogs].filter(l=>l.habitId===h.id).sort((a,b)=>a.date===b.date?(b.time||'').localeCompare(a.time||''):b.date.localeCompare(a.date))[0];
+    if(lastF&&lastF.status==='fail'&&lastF.reason&&REASONS[lastF.reason])L.push(`지난번엔 ${josa(REASONS[lastF.reason].label,'으로/로')} 놓쳤는데, 이번엔 해냈네요.`);
+    if(bh&&bh.consecutiveFails>=2)L.push(`${bh.consecutiveFails}번 연속 놓친 흐름을 끊어냈어요. 사실 이게 가장 중요한 순간이에요.`);
+    else L.push(`최근 7일 동안 ${A.week.done+1}번째 성공이에요. 흐름이 좋아요.`);
+    return resp(L.join('\n'),[{type:'COMPLETE_ROUTINE',habitRef:h.name,dateOffset:e.dateOffset}],{steps:STEPS.log,focus:'today'});
+  },
+  FAIL_ROUTINE(e,c,s){
+    const h=e.habitKey?findByKey(s,e.habitKey):c.target;
+    if(e.habitKey&&!h)return resp(`${josa(e.habitName,'은/는')} 아직 등록된 습관이 아니에요. 부담 없는 버전으로 만들어볼까요?`,[],{steps:STEPS.chat,suggestions:[`부담 없는 ${e.habitName} 습관 만들어줘`]});
+    if(!h)return resp('어떤 루틴을 못 했나요? 이유도 함께 기록해둘게요.',[],{steps:STEPS.chat,buttons:habitChoice(s,x=>`${x.name} ${e.raw}`)});
+    const dw=e.dateOffset===-1?'어제는':e.dateOffset===-2?'그제는':'오늘은';const n=h.name;const rk=e.reason;
+    const M={tired:`${dw} 피곤해서 ${josa(n,'을/를')} 쉬었군요.\n괜찮아요. 실패 데이터를 다음 루틴을 조정하는 데 활용할게요.`,
+      busy:`${dw} 일정이 빠듯해서 ${n} 시간을 못 냈군요.\n바쁜 날을 위한 '최소 버전'을 만들어두면 좋아요. 이 기록도 루틴 조정에 반영할게요.`,
+      forgot:`${dw} ${josa(n,'을/를')} 깜빡했군요.\n잊어버림은 의지보다 '신호' 문제예요. 매일 하는 행동 뒤에 붙이는 방법을 찾아볼게요.`,
+      motivation:`${dw} 하기 싫은 날이었군요. 그런 날도 있어요.\n다음엔 '딱 2분만'을 목표로 해봐요. 이 기록도 조정에 활용할게요.`,
+      sick:`컨디션이 안 좋았군요. ${dw} 쉬는 게 맞아요.\n회복이 먼저예요. 이 기록은 무리하지 않는 루틴을 만드는 데 참고할게요.`,
+      weather:`날씨 때문에 ${josa(n,'을/를')} 못 했군요.\n날씨와 상관없는 실내 대안을 하나 준비해두면 좋아요.`,
+      social:`${dw} 일정이 있어서 ${josa(n,'을/를')} 못 했군요.\n약속 있는 날은 시간을 앞당기는 방법도 있어요.`,
+      burden:`${n} 루틴이 부담스러웠군요.\n강도를 조정할 신호로 기록해둘게요.`};
+    const L=[rk?M[rk]:`${dw} ${josa(n,'을/를')} 못 했군요. 괜찮아요.\n어떤 이유였는지 알려주시면 다음 루틴 조정에 반영할게요.`];
+    if(rk){const prevN=(s.failureReasons||[]).filter(f=>f.habitId===h.id&&f.reason===rk).length;const lb=REASONS[rk].label;
+      if(prevN>=1)L.push(V('remember',[`지난번에도 ${josa(lb,'으로/로')} ${josa(n,'을/를')} 놓치셨죠. 이번이 ${prevN+1}번째예요.`,`${josa(lb,'으로/로')} 놓친 게 벌써 ${prevN+1}번째예요. 이 패턴은 꼭 기억해둘게요.`,`기억하고 있어요. ${n}에서 '${lb}'는 이번이 ${prevN+1}번째예요.`]));}
+    L.push(`📉 분석 탭: ${josa(rk?REASONS[rk].label:'기타','으로/로')} 인한 실패 +1`);
+    if(/괜찮|어떡|어떻게\s?해|망한|큰일/.test(e.text)){const q=QA.find(x=>x.id==='miss_day');L.push('',V('qa_miss_day',q.a));}
+    return resp(L.join('\n'),[{type:'FAIL_ROUTINE',habitRef:h.name,dateOffset:e.dateOffset,reason:rk||'unknown'}],{steps:STEPS.log,focus:'analytics',
+      suggestions:rk?['📊 내 습관 분석해줘',`${n} 루틴을 더 쉽게 바꿔줘`]:['너무 피곤했어 그래서 못했어','시간이 없어서 못했어','깜빡해서 못했어']});
+  },
+  ANALYZE_HABITS(e,c,s){
+    const A=computeAnalytics(s);
+    if(A.total<3)return resp('아직 분석할 실행 기록이 부족해요.\n오늘 탭에서 완료나 실패를 3번 이상 기록하면 패턴을 찾아드릴게요.',[],{steps:STEPS.analyze,suggestions:['🏃 운동 습관 만들어줘']});
+    const hs=A.byHabit.filter(x=>x.total>0).sort((a,b)=>b.total-a.total);
+    const weak=hs.filter(x=>x.total>=3).sort((a,b)=>a.rate-b.rate)[0];
+    const L=['📊 최근 습관을 분석했어요.',''];
+    hs.forEach(x=>L.push(x.total>=3?`${x.icon} ${x.name} 성공률: **${x.rate}%**`:`${x.icon} ${x.name}: 기록 ${x.total}개 (데이터 모으는 중)`));
+    A.byHabit.filter(x=>x.total===0).forEach(x=>L.push(`${x.icon} ${x.name}: 새로 시작 · 첫 기록을 기다리는 중`));
+    L.push('');
+    if(A.bestHour)L.push(`가장 성공률이 높은 시간: **${fmtTime(pad(A.bestHour.hour)+':00')}**`);
+    if(A.hardestDay)L.push(`가장 어려운 요일: **${DAY_KO[A.hardestDay.day]}요일**`);
+    if(A.topReason)L.push(`가장 많은 실패 원인: **${A.topReason.label}**`);
+    const pre={tired:'피로가 가장 큰 실패 원인이라 ',busy:'시간 부족이 가장 큰 원인이라 ',forgot:'잊어버림이 많아서 ',motivation:'의욕이 떨어지는 날이 많아서 '}[A.topReason&&A.topReason.key]||'';
+    const target=weak&&weak.rate<75?weak:null;
+    const insight=`${pre}현재 데이터에서는 짧은 루틴을 ${A.bestHour?fmtTime(pad(A.bestHour.hour)+':00')+' 전후에':'같은 시간에'} 실행하는 방식이 가장 잘 맞아요.`+(target?` 특히 ${target.name}(${target.rate}%)${josa(target.name,'은/는').slice(target.name.length)} 시간을 줄여 부담부터 낮춰보세요.`:'');
+    L.push('',`💡 ${insight}`);
+    const report={createdAt:Date.now(),overall:A.rate,habits:hs.map(x=>({name:x.name,icon:x.icon,rate:x.rate,total:x.total})),bestHour:A.bestHour?A.bestHour.hour:null,bestBucket:A.bestBucket?A.bestBucket.name:null,
+      hardestDay:A.hardestDay?A.hardestDay.day:null,topReason:A.topReason,streak:A.streak,insight,weak:target?target.name:null};
+    const buttons=[];
+    if(target){const th=s.habits.find(x=>x.id===target.habitId);const cd=th&&curDur(s,th);
+      if(th&&th.unit==='min'&&cd>5){const to=suggestLower(cd);buttons.push({label:`${th.name} ${to}분으로 줄이기`,primary:true,actions:[{type:'LOWER_DIFFICULTY',habitRef:th.name,duration:to},{type:'START_EXPERIMENT',experiment:{title:`${to}분 ${th.name} 7일 실험`,habitId:th.id,hypothesis:`${to}분으로 줄이면 실행률이 올라갈 것이다`}}],after:{message:`좋아요. ${th.name} 시간을 ${cd}분에서 ${to}분으로 낮췄어요.\n7일 동안 이 강도로 실험해볼게요.`,focus:'today'}});}}
+    if(A.hardestDay){const dk=DAY_KO[A.hardestDay.day];buttons.push({label:`${dk}요일 절반 루틴 실험`,actions:[{type:'START_EXPERIMENT',experiment:{title:`${dk}요일 절반 루틴 실험`,hypothesis:`${dk}요일엔 루틴을 절반으로 줄이면 성공률이 오를 것이다`}}],after:{message:`좋아요. ${dk}요일엔 모든 루틴을 절반만 해도 성공으로 칠게요.\nDNA 탭에서 실험 진행 상황을 볼 수 있어요.`,focus:'dna'}});}
+    return resp(L.join('\n'),[{type:'ANALYZE_HABITS',report}],{steps:STEPS.analyze,cards:[{type:'report'}],focus:'analytics',buttons});
+  },
+  WEEKLY_REPORT(e,c,s){
+    const A=computeAnalytics(s);if(!A.week.total)return resp('이번 주에는 아직 기록이 없어요. 오늘 루틴부터 하나 체크해볼까요?',[],{steps:STEPS.analyze});
+    const now=new Date();const from=ymd(addDays(now,-6));
+    const per=s.habits.map(h=>{const w=s.routineLogs.filter(l=>l.habitId===h.id&&l.date>=from);const d=w.filter(l=>l.status==='done').length;return {name:h.name,icon:h.icon,done:d,total:w.length,rate:w.length?Math.round(d/w.length*100):null};}).filter(x=>x.total);
+    const best=[...per].sort((a,b)=>b.rate-a.rate)[0],worst=[...per].sort((a,b)=>a.rate-b.rate)[0];
+    const delta=A.prevWeek.rate!=null?A.week.rate-A.prevWeek.rate:null;
+    const L=['🗓 최근 7일 리포트예요.','',`완료 **${A.week.done}/${A.week.total}** · 성공률 **${A.week.rate}%**${delta!=null?` (지난주 대비 ${delta>=0?'+':''}${delta}%p)`:''}`];
+    if(best)L.push(`가장 잘한 습관: ${best.icon} ${best.name} (${best.rate}%)`);
+    if(worst&&worst!==best)L.push(`가장 많이 놓친 습관: ${worst.icon} ${worst.name} (${worst.rate}%)`);
+    L.push(`연속 실행: ${A.streak}일`,'',`💡 다음 주 제안: ${worst&&worst.rate<60?`${worst.name}의 시간을 줄이고, 가장 잘되는 시간대로 옮겨보세요.`:'지금 흐름을 유지하면서 한 가지 습관만 강도를 올려보세요.'}`);
+    return resp(L.join('\n'),[{type:'WEEKLY_REPORT',report:{createdAt:Date.now(),week:A.week,prevWeek:A.prevWeek,per,streak:A.streak}}],{steps:STEPS.analyze,cards:[{type:'weekly'}],focus:'analytics'});
+  },
+  GENERAL_HABIT_CHAT(e,c,s){
+    const A=computeAnalytics(s);
+    if(c.sub==='qa'){const q=c.qa;const tail=q.p?q.p(s,A):null;
+      return resp(V('qa_'+q.id,q.a)+(tail?`\n\n📌 ${tail}`:''),[],{steps:['🧠 질문 이해 중...','📚 답변 정리 중...'],suggestions:q.f||null});}
+    if(c.sub==='greet')return resp(`안녕하세요! 오늘은 어떤 습관을 함께 설계해볼까요?\n오늘 루틴은 ${A.today.total}개 중 ${A.today.done}개를 마쳤어요.`,[],{steps:STEPS.chat});
+    if(c.sub==='help')return resp('저는 습관과 루틴을 위한 AI 코치예요. 이렇게 말하면 변경안을 보여드리고, 버튼을 누르면 앱 전체에 반영돼요.\n\n• "부담 없이 운동 시작하고 싶어" → 습관과 7일 루틴 생성\n• "독서를 밤 10시로 옮겨줘" → 시간 변경\n• "오늘 물 못 마셨어, 깜빡했어" → 실패와 원인 기록\n• "내 습관 분석해줘" → 패턴 분석 리포트\n• "하루 빼먹으면 어떡해?" → 습관 질문에 답변',[],{steps:STEPS.chat});
+    if(c.sub==='goal')return resp(`목표를 **${josa(e.goal,'으로/로')}** 저장했어요.\n이 목표에 맞춰 루틴을 제안할게요. 필요한 습관이 있으면 말해주세요.`,[{type:'SET_GOAL',goal:e.goal}],{steps:STEPS.modify,focus:'today'});
+    if(c.sub==='status'){const h=c.target;const rs=routinesOf(s,h);const bh=A.byHabit.find(x=>x.habitId===h.id);
+      return resp(`${h.icon} ${h.name} 루틴은 ${rs.length?`${fmtDays(rs[0].days)} ${fmtTime(rs[0].time)}, ${new Set(rs.map(r=>r.title)).size===1&&rs.length>1?rs[0].title+' × '+rs.length:rs.map(r=>r.title).join(' · ')}`:'아직 비어 있어요'}.\n${bh&&bh.total>=3?`최근 성공률은 ${bh.rate}%예요.`:'아직 기록이 많지 않아요.'} 어떻게 바꿔볼까요?`,[],{steps:STEPS.chat,
+        suggestions:[`${h.name} 시간을 바꿔줘`,`${h.name} 루틴을 더 쉽게 바꿔줘`,`${h.name} 강도를 올려줘`]});}
+    const t=e.text;const h=c.target&&c.target.unit==='min'?c.target:null;let msg;
+    if(/미루|귀찮|의욕|동기|게을|하기\s?싫/.test(t))msg='의욕이 안 나는 날엔 "2분 규칙"을 써보세요.\n딱 2분만 하고 그만둬도 성공으로 칠게요. 시작만 하면 이어서 하게 되는 경우가 훨씬 많아요.';
+    else if(/시간|바빠|바쁘/.test(t))msg='바쁠수록 루틴을 "최소 버전"으로 쪼개두는 게 좋아요.\n30분 독서 대신 책 한 쪽, 운동 대신 스쿼트 10회처럼요. 최소 버전도 성공으로 기록할게요.';
+    else if(/작심삼일|꾸준|포기/.test(t))msg='작심삼일은 실패가 아니라 데이터예요.\n3일 차에 무너진다면 그날만 강도를 절반으로 낮추는 규칙을 넣어볼게요.';
+    else if(/힘들|지쳐|어려|못\s?하겠|안\s?돼/.test(t))msg=A.topReason?`요즘 실행이 버겁군요. 기록을 보면 실패 원인 1위가 '${A.topReason.label}'(${A.topReason.count}회)예요.\n루틴 강도가 지금 컨디션보다 높을 수 있어요. 가볍게 조정해볼까요?`:'요즘 실행이 버겁군요. 루틴 강도가 지금 컨디션보다 높을 수 있어요. 가볍게 조정해볼까요?';
+    else msg='습관은 의지보다 설계의 문제예요.\n무엇이 가장 걸리는지 알려주시면 루틴을 거기에 맞춰 바꿔드릴게요.';
+    const buttons=[];
+    if(h){const cd=curDur(s,h);if(cd>3){const to=suggestLower(cd);buttons.push({label:`${h.name} ${to}분으로 가볍게`,primary:true,actions:[{type:'LOWER_DIFFICULTY',habitRef:h.name,duration:to}],after:{message:`좋아요. ${h.name} 시간을 ${cd}분에서 ${to}분으로 낮췄어요.\n지금은 꾸준히 실행하는 것이 더 중요해요.`,focus:'today'}});}}
+    return resp(msg,[],{steps:STEPS.chat,buttons,suggestions:['📊 내 습관 분석해줘','오늘 운동 못했어 너무 피곤했어']});
+  },
+  OUT_OF_SCOPE(){return resp(V('oos',['🧠 저는 습관과 루틴을 위한 AI 코치예요.\n\n습관 만들기, 루틴 설계, 실행 분석과 관련된 질문을 해주세요.','🧠 그 질문은 제가 도와드리기 어려워요. 저는 습관과 루틴만 담당하는 AI 코치예요.\n\n습관 만들기, 루틴 설계, 실행 분석이라면 바로 도와드릴게요.','🧠 아쉽지만 그건 제 전문이 아니에요. 저는 습관과 루틴을 위한 AI 코치예요.\n\n대신 오늘 루틴이나 습관 이야기라면 뭐든 말해주세요.']),[],{steps:STEPS.chat,suggestions:DEFAULT_SUGGEST});},
+  CONFIRM_PROPOSAL(e,c){return resp('',[],{accept:true,steps:[]});},
+  CANCEL_PROPOSAL(e,c){return resp(V('cancel',['좋아요. 지금 루틴을 그대로 둘게요.','알겠어요, 이번 변경은 넘길게요.','네, 그대로 유지할게요. 필요하면 언제든 말해주세요.']),[],{deny:true,steps:STEPS.chat});},
+  REVISE_PROPOSAL(e,c,s){
+    const p=c.pending,old=p.ent||{};
+    const e2={raw:e.raw,text:'',habitKey:p.habitKey,habitName:p.habitName,customName:p.customName,activity:old.activity||null,goal:null,struggle:false,
+      time:e.time?{time:e.time.time,explicit:true}:(old.time?{time:old.time,explicit:true}:null),
+      duration:e.duration?{target:e.duration.target}:(old.duration?{target:old.duration}:null),
+      days:e.days||old.days||null,difficulty:e.difficulty||old.difficulty||null};
+    const r=B.CREATE_HABIT(e2,{intent:'CREATE_HABIT',sub:p.customName&&!p.habitKey?'custom':undefined},s);
+    const ch=[];if(e.time)ch.push(`⏰ ${fmtTime(e.time.time)}`);if(e.duration)ch.push(`⏱ ${e.duration.target}분`);if(e.days)ch.push(`📅 ${fmtDays(e.days)}`);if(e.difficulty&&!e.duration)ch.push(`난이도 ${DIFF_KO[e.difficulty]}`);
+    r.message=`${V('revise',['좋아요, 방금 설계안을 고쳤어요.','네, 그 조건으로 다시 짜봤어요.','바로 반영해서 설계안을 수정했어요.'])} (${ch.join(' · ')})\n\n`+r.message.split('\n').filter(x=>!/기본 목록에 없는|^좋아요\.|처음부터 무리하지|처음에는 부담/.test(x)).join('\n');
+    r.ui.supersede=true;r.revised={...old,time:e2.time&&e2.time.time,duration:e2.duration&&e2.duration.target,days:e2.days,difficulty:e2.difficulty};
+    return r;
+  },
+  UNDO_CHANGE(e,c,s){
+    const u=s.meta&&s.meta.undo;
+    if(!u)return resp('되돌릴 최근 변경이 없어요. 루틴을 추가하거나 바꾼 직후에 "방금 거 되돌려줘"라고 말하면 이전 상태로 돌려드릴게요.',[],{steps:STEPS.chat});
+    return ask(resp(`되돌렸어요. '${u.label}' 이전 상태로 돌아갔어요.`,[{type:'RESTORE'}],{steps:STEPS.modify,focus:'routines'}),`방금 변경을 되돌릴까요?\n↩️ ${u.label}${u.more?` 외 ${u.more}건`:''}`,'되돌리기');
+  },
+  EXPLAIN(e,c,s){return resp('💡 '+s.meta.lastWhy,[],{steps:STEPS.chat});},
+  UNCLEAR(){return resp(V('unclear',['어떤 부분을 도와드릴까요?','조금만 더 알려주시면 바로 도와드릴게요. 어떤 쪽인가요?','제가 정확히 이해했는지 모르겠어요. 이 중에 가까운 게 있을까요?']),[],{steps:STEPS.chat,options:true,
+    buttons:[{label:'🏃 습관 만들기',fill:'새 습관 만들어줘'},{label:'🔄 루틴 변경',fill:'루틴을 바꾸고 싶어'},{label:'📊 습관 분석',fill:'내 습관 분석해줘'},{label:'💬 실행이 어려운 이유 상담',fill:'요즘 습관을 실행하기가 어려워'}]});}
+};
+
+const MockAI={
+  name:'MockAI',
+  async generateResponse(input,state){
+    let e=understand(input,state),c=classify(e,state),typo=null;
+    const fx=fixTypos(norm(input),state);
+    if(fx.fixes.length){const e2=understand(fx.text,state),c2=classify(e2,state);
+      if(c2.intent!=='UNCLEAR'&&(c.intent==='UNCLEAR'||c2.confidence>c.confidence+.05)){e=e2;c=c2;typo=fx.fixes;}}
+    const r=(B[c.intent]||B.UNCLEAR)(e,c,state);
+    r.understanding={intent:c.intent,confidence:Math.round(c.confidence*100),entities:compact(e)};
+    if(typo){r.understanding.typo_fixed=typo.map(f=>`${f.from}→${f.to}`);
+      if(r.message)r.message=V('typo',[`(혹시 '${typo[0].to}'${josa(typo[0].to,'을/를').slice(typo[0].to.length)} 말씀하신 거죠? 그렇게 이해했어요.)`,`('${typo[0].from}'${josa(typo[0].from,'은/는').slice(typo[0].from.length)} '${josa(typo[0].to,'으로/로')}' 알아들었어요.)`])+'\n'+r.message;}
+    if(c.target&&state.meta)state.meta.lastHabitId=c.target.id;
+    else if(e.habitKey&&state.meta){const h=state.habits.find(x=>x.key===e.habitKey);if(h)state.meta.lastHabitId=h.id;}
+    if(r.ui.why&&state.meta)state.meta.lastWhy=r.ui.why;
+    if(r.ui.confirm&&r.actions.length){
+      const cf=r.ui.confirm;
+      const okMsg=r.message.replace(/^좋아요\./,V('ok',['좋아요.','네,','알겠어요.','반영 완료!']));
+      r.ui.buttons=[{label:cf.label,primary:true,actions:r.actions,after:{message:okMsg,focus:r.ui.focus,suggestions:r.ui.suggestions}},
+        {label:'취소',after:{message:V('cancel',['좋아요. 지금 루틴을 그대로 둘게요.','알겠어요, 이번 변경은 넘길게요.','네, 그대로 유지할게요. 필요하면 언제든 말해주세요.'])}}].concat(r.ui.buttons||[]);
+      const q=quoteStruggle(e);const lowerish=/LOWER|CHANGE_DURATION/.test(c.intent)&&/→ \*\*\d+분/.test(cf.ask)&&q;
+      r.message=`${lowerish?`"${q}"라고 하셔서 부담을 줄이는 쪽으로 준비했어요.\n`:''}${cf.ask}\n\n${V('foot',[`**[${cf.label}]**를 누르면 앱에 반영할게요.`,`괜찮으면 **[${cf.label}]**를 눌러주세요. "응"이라고 답해도 돼요.`,`**[${cf.label}]** 한 번이면 바로 바뀌어요.`,`마음에 들면 **[${cf.label}]**, 아니면 원하는 조건을 말해주세요.`])}`;
+      r.proposedActions=r.actions;r.actions=[];r.ui.suggestions=null;r.ui.focus=null;
+      r.ui.steps=['🧠 요청 이해 중...','🔧 변경안 준비 중...'];
+    }
+    if(!r.actions.length&&!r.proposedActions){const pb=(r.ui.buttons||[]).find(b=>b.actions&&b.actions.length);if(pb)r.proposedActions=pb.actions;}
+    if(r.proposedActions&&r.proposedActions.length&&!r.ui.accept){
+      const tg=c.target||state.habits.find(x=>x.key===e.habitKey);
+      r.pending={intent:c.intent==='REVISE_PROPOSAL'?'CREATE_HABIT':c.intent,habitKey:c.pending?c.pending.habitKey:e.habitKey,habitName:c.pending?c.pending.habitName:(e.habitName||e.customName),customName:c.pending?c.pending.customName:e.customName,
+        habitId:tg?tg.id:null,ent:r.revised||{time:e.time&&e.time.time,duration:e.duration&&e.duration.target,days:e.days,difficulty:e.difficulty,activity:e.activity}};}
+    return r;
+  },
+  /* 하루 첫 실행 때 AI가 먼저 거는 말: 오늘 현황 + 가장 중요한 한 가지 */
+  greet(state,now=new Date()){
+    const T=ymd(now);const meta=state.meta;if(meta.lastGreetDate===T)return null;
+    meta.lastGreetDate=T;meta.planPrompted=meta.planPrompted||{};
+    const hr=now.getHours();const hello=hr<5?'🌙 늦은 밤이에요':hr<11?'☀️ 좋은 아침이에요':hr<17?'🌤 좋은 오후예요':'🌆 좋은 저녁이에요';
+    if(!state.habits.length)return {message:`${hello}! 아직 등록된 습관이 없어요.\n만들고 싶은 습관을 편하게 말해주세요. 제가 7일 루틴으로 설계해드릴게요.`,tag:'오늘의 브리핑',suggestions:HABIT_CHIPS.slice(0,4)};
+    const A=computeAnalytics(state,now);const dk=dayOf(T);const Y=ymd(addDays(now,-1));
+    const todayRs=state.routines.filter(r=>r.days.includes(dk)).sort((a,b)=>a.time.localeCompare(b.time));
+    const logOf=(r,d)=>state.routineLogs.find(l=>l.routineId===r.id&&l.date===d);
+    const doneT=todayRs.filter(r=>{const l=logOf(r,T);return l&&l.status==='done';}).length;
+    const nowHM=pad(hr)+':'+pad(now.getMinutes());const next=todayRs.find(r=>!logOf(r,T)&&r.time>=nowHM)||todayRs.find(r=>!logOf(r,T));
+    const L=[`${hello}!`];
+    L.push(todayRs.length?`오늘 루틴 ${todayRs.length}개 중 ${doneT}개를 마쳤어요.${next?` 다음은 ⏰ ${fmtTime(next.time)} **${next.title}**예요.`:' 오늘 할 일은 모두 끝났어요 🎉'}`:'오늘은 예정된 루틴이 없는 날이에요.');
+    const rateIn=(hid,from,to)=>{const w=state.routineLogs.filter(l=>(!hid||l.habitId===hid)&&l.date>=from&&l.date<=to);const d=w.filter(l=>l.status==='done').length;return w.length?{rate:Math.round(d/w.length*100),n:w.length}:null;};
+    let buttons=null,pre=[],why=null;
+    // 1) 끝난 실험 결과
+    const xp=state.experiments.find(x=>x.status!=='done'&&x.startDate<=ymd(addDays(now,-7)));
+    if(xp){const st=parseYmd(xp.startDate);const during=rateIn(xp.habitId,xp.startDate,ymd(addDays(st,6)));const before=rateIn(xp.habitId,ymd(addDays(st,-7)),ymd(addDays(st,-1)));
+      const res={before:before?before.rate:null,after:during?during.rate:null};pre.push({type:'END_EXPERIMENT',experimentId:xp.id,result:res});
+      L.push('',`🧪 **${xp.title}**이 끝났어요.`);
+      if(res.before!=null&&res.after!=null){const dlt=res.after-res.before;L.push(`실험 전 ${res.before}% → 실험 중 **${res.after}%** (${dlt>=0?'+':''}${dlt}%p)`);
+        L.push(dlt>=10?'효과가 있었어요. 지금 설정을 유지하는 걸 추천해요.':dlt>0?'조금 나아졌어요. 일주일 더 지켜보면 확실해질 거예요.':dlt===0?'성공률은 그대로였어요. 강도보다 시간대나 시작 신호를 바꿔보는 게 좋겠어요.':'기대만큼 효과가 없었어요. 시간대를 바꿔보는 것도 방법이에요.');}
+      else L.push('비교할 기록이 부족해서 결과는 다음 주에 다시 볼게요.');
+      why='실험 시작 전 7일과 실험 기간 7일의 성공률을 비교했어요.';}
+    // 2) 어제 놓친 습관
+    if(!xp){
+      const missed=[];state.habits.forEach(h=>{if(h.createdAt>Y)return;const rs=state.routines.filter(r=>r.habitId===h.id&&r.days.includes(dayOf(Y)));if(!rs.length)return;
+        const ls=rs.map(r=>logOf(r,Y));if(ls.some(l=>l&&l.status==='done'))return;if(ls.every(l=>!l)&&!ls.length)return;const f=ls.find(l=>l&&l.status==='fail');missed.push({h,reason:f&&f.reason,logged:!!f});});
+      if(missed.length){const pickM=missed.map(m=>({...m,cf:(A.byHabit.find(b=>b.habitId===m.h.id)||{}).consecutiveFails||0})).sort((a,b)=>b.cf-a.cf)[0];
+        const h=pickM.h;const rl=pickM.reason&&REASONS[pickM.reason]?REASONS[pickM.reason].label:null;
+        L.push('',`어제 ${josa(h.name,'을/를')} 놓쳤네요${rl?` (${rl})`:pickM.logged?'':' (기록 없음)'}.`);
+        const cd=curDur(state,h);
+        if(pickM.cf>=2&&h.unit==='min'&&cd>5){const to=suggestLower(cd);
+          L.push(`${pickM.cf}번 연속이라 오늘은 **${to}분**만 해보는 건 어때요?`);
+          buttons=[{label:`${to}분으로 낮추기`,primary:true,actions:[{type:'LOWER_DIFFICULTY',habitRef:h.name,duration:to}],after:{message:`좋아요. ${h.name} 시간을 ${cd}분에서 ${to}분으로 낮췄어요.\n오늘은 가볍게 이어가는 것만 목표로 해요.`,focus:'today'}},
+            {label:'그대로 할게요',after:{message:V('keep',['좋아요. 오늘은 원래대로 도전해봐요. 응원할게요!','알겠어요. 오늘 꼭 이어가봐요 💪'])}}];
+          why=`${h.name}${josa(h.name,'을/를').slice(h.name.length)} 연속으로 놓치면 루틴이 지금 컨디션보다 무겁다는 신호예요. 하루라도 짧게 이어가는 게 다시 길게 하는 것보다 습관 유지에 유리해요.`;}
+        else L.push(V('miss',['오늘은 "딱 2분만"이라도 이어가 볼까요? 두 번 연속으로만 안 빠지면 괜찮아요.','한 번 빠진 건 괜찮아요. 오늘 다시 이어가면 흐름은 그대로예요.']));}
+    }
+    // 3) 7일 플랜 끝난 습관
+    if(!xp&&!buttons){
+      const ready=state.habits.find(h=>!meta.planPrompted[h.id]&&h.createdAt<=ymd(addDays(now,-7))&&h.unit==='min');
+      if(ready){meta.planPrompted[ready.id]=T;const r7=rateIn(ready.id,ymd(addDays(now,-7)),Y);const cd=curDur(state,ready);
+        if(r7&&r7.n>=3){
+          if(r7.rate>=80&&cd){const to=suggestHigher(cd);L.push('',`📈 ${ready.icon} ${ready.name} 7일 플랜을 마쳤어요. 지난 7일 성공률 **${r7.rate}%**!`,`다음 주는 **${to}분**으로 한 단계 올려볼까요?`);
+            buttons=[{label:`${to}분으로 올리기`,primary:true,actions:[{type:'INCREASE_DIFFICULTY',habitRef:ready.name,duration:to}],after:{message:`좋아요. ${ready.name} 시간을 ${cd}분에서 ${to}분으로 올렸어요. 새 7일 플랜이 시작돼요.`,focus:'routines'}},{label:'지금이 좋아요',after:{message:'좋아요. 지금 강도를 유지할게요. 익숙해지면 언제든 말해주세요.'}}];
+            why='2주 가까이 80% 이상 지켜지면 한 단계 올려도 무너지지 않는 경우가 많아요. 한 번에 20~30%만 늘리는 게 안전해요.';}
+          else if(r7.rate<50&&cd>5){const to=suggestLower(cd);L.push('',`${ready.icon} ${ready.name} 7일 플랜이 끝났어요. 지난 7일 성공률은 ${r7.rate}%예요.`,`다음 주는 **${to}분**으로 낮춰서 다시 흐름을 만들어볼까요?`);
+            buttons=[{label:`${to}분으로 낮추기`,primary:true,actions:[{type:'LOWER_DIFFICULTY',habitRef:ready.name,duration:to}],after:{message:`좋아요. ${ready.name} 시간을 ${to}분으로 낮췄어요.`,focus:'routines'}},{label:'그대로 할게요',after:{message:'알겠어요. 이번 주도 같은 강도로 해봐요.'}}];
+            why='성공률이 절반 아래면 강도를 낮춰 성공 경험부터 다시 쌓는 게 효과적이에요.';}
+          else L.push('',`${ready.icon} ${ready.name} 7일 플랜을 마쳤어요. 지난 7일 성공률 ${r7.rate}%로 안정적이에요. 이번 주는 지금 강도를 유지해봐요.`);}}
+    }
+    // 4) 연속 기록 이정표
+    if([3,7,14,21,30,50,100].includes(A.streak))L.push('',`🔥 ${A.streak}일 연속 실행 중이에요! 오늘 하나만 체크해도 ${A.streak+1}일이 돼요.`);
+    return {message:L.join('\n'),tag:'오늘의 브리핑',buttons,preActions:pre,why,suggestions:['📊 내 습관 분석해줘','❓ 하루 빼먹으면 어떡해?']};
+  },
+  /* Scenario F: watches the log stream and proposes an adjustment by itself */
+  proactive(state){
+    const A=computeAnalytics(state);state.meta.nudged=state.meta.nudged||{};
+    for(const bh of A.byHabit){
+      if(bh.consecutiveFails<3||state.meta.nudged[bh.habitId]===bh.lastLogId)continue;
+      const h=state.habits.find(x=>x.id===bh.habitId);const cd=curDur(state,h);
+      const pre=[{type:'RECORD_NUDGE',habitId:h.id,logId:bh.lastLogId}];
+      if(h.unit==='min'&&cd>3){const to=suggestLower(cd);
+        return {preActions:pre,message:`최근 ${bh.consecutiveFails}번 연속 ${josa(h.name,'을/를')} 실행하지 못했어요.\n현재 루틴이 부담스러울 수 있어요.\n${h.name} 시간을 ${cd}분에서 ${to}분으로 낮추는 것을 추천해요.`,tag:'AI 자동 감지',
+          buttons:[{label:`${to}분으로 변경`,primary:true,actions:[{type:'LOWER_DIFFICULTY',habitRef:h.name,duration:to},{type:'START_EXPERIMENT',experiment:{title:`${to}분 ${h.name} 7일 실험`,habitId:h.id,hypothesis:`${to}분으로 줄이면 실행률이 올라갈 것이다`}}],
+            after:{message:`좋아요. ${h.name} 시간을 ${cd}분에서 ${to}분으로 낮췄어요.\n지금은 꾸준히 실행하는 것이 더 중요해요. 7일 뒤에 결과를 함께 볼게요.`,focus:'today'}},
+            {label:'이대로 유지',after:{message:'좋아요. 이번 주는 그대로 유지해볼게요. 한 번만 더 놓치면 다시 알려드릴게요.'}}]};}
+      return {preActions:pre,message:`최근 ${bh.consecutiveFails}번 연속 ${josa(h.name,'을/를')} 놓쳤어요.\n루틴 구성을 한 단계 줄여보는 걸 추천해요.`,tag:'AI 자동 감지',
+        buttons:[{label:'한 단계 줄이기',primary:true,actions:[{type:'LOWER_DIFFICULTY',habitRef:h.name}],after:{message:`좋아요. ${h.name} 루틴을 한 단계 줄였어요.`}},{label:'이대로 유지',after:{message:'좋아요. 그대로 유지할게요.'}}]};
+    }
+    return null;
+  }
+};
+function compact(e){
+  const o={};if(e.habitName)o.habit=e.habitName;if(e.customName)o.custom_habit=e.customName;if(e.activity)o.activity=e.activity;if(e.time)o.time=e.time.time;if(e.days)o.days=e.days;
+  if(e.duration){o.duration=e.duration.target;if(e.duration.from)o.duration_from=e.duration.from;}if(e.difficulty)o.difficulty=e.difficulty;
+  if(e.outcome)o.outcome=e.outcome;if(e.reason)o.failure_reason=e.reason;if(e.dateOffset)o.date_offset=e.dateOffset;if(e.goal)o.goal=e.goal;return o;
+}
+
+/* AIEngine: the single seam the UI talks to. Swap `provider` for a real-API adapter later. */
+const AIEngine={
+  provider:MockAI,
+  async generateResponse(input,state){
+    const r=await this.provider.generateResponse(input,state);
+    r.actions=(r.actions||[]).filter(a=>ActionHandler.validate(a));r.ui=r.ui||{};return r;
+  },
+  proactive(state){return this.provider.proactive?this.provider.proactive(state):null;},
+  greet(state,now){return this.provider.greet?this.provider.greet(state,now):null;}
+};
+
+/* ---------- State ---------- */
+function makeEmptyState(){return {v:1,user:{name:'',goal:''},habits:[],routines:[],routineLogs:[],failureReasons:[],analytics:{},aiMessages:[],experiments:[],meta:{lastHabitId:null,nudged:{}}};}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function makeDemoState(now=new Date()){
+  const s=makeEmptyState();
+  [['meditation','beginner'],['water','beginner'],['reading','intermediate'],['sleep','beginner']].forEach(([k,l])=>ActionHandler.apply(s,buildCreate(k,{difficulty:l}).actions));
+  const start=ymd(addDays(now,-21));s.habits.forEach(h=>h.createdAt=start);s.meta.lastHabitId=null;
+  s.user.goal='무리하지 않고 꾸준한 하루 만들기';
+  const rnd=mulberry32(20261003);const P={meditation:.86,water:.8,reading:.66,sleep:.62};
+  const RS={meditation:['tired'],water:['forgot','busy','tired'],reading:['tired','tired','busy','motivation'],sleep:['tired','social','motivation','tired']};
+  const push=(r,h,d,ok,reason)=>{const l={id:uid('l'),routineId:r.id,habitId:h.id,habitName:h.name,title:r.title,date:d,time:r.time,status:ok?'done':'fail',reason:ok?null:reason};s.routineLogs.push(l);if(!ok)s.failureReasons.push({id:uid('f'),logId:l.id,habitId:h.id,habitName:h.name,reason,date:d});};
+  for(let i=21;i>=1;i--){const d=ymd(addDays(now,-i)),dk=dayOf(d);
+    for(const r of s.routines){const h=s.habits.find(x=>x.id===r.habitId);let p=P[h.key];if(dk==='FRI')p-=.42;if(dk==='SAT'&&h.key==='sleep')p-=.25;if(h.key==='water'&&r.time>='16:00')p-=.15;
+      let ok=rnd()<p;if(h.key!=='reading'&&i===1)ok=true;if(h.key==='reading'&&i<=2)ok=false;if(h.key==='reading'&&i===3)ok=true;
+      push(r,h,d,ok,ok?null:(h.key==='reading'&&i<=2?'tired':RS[h.key][Math.floor(rnd()*RS[h.key].length)]));}}
+  const T=ymd(now);const med=s.routines.find(r=>s.habits.find(h=>h.id===r.habitId).key==='meditation');const wat=s.routines.filter(r=>s.habits.find(h=>h.id===r.habitId).key==='water').sort((a,b)=>a.time.localeCompare(b.time))[0];
+  push(med,s.habits.find(h=>h.id===med.habitId),T,true);push(wat,s.habits.find(h=>h.id===wat.habitId),T,true);
+  s.analytics=computeAnalytics(s);
+  s.aiMessages=[{id:'welcome',role:'ai',at:Date.now(),text:'안녕하세요, RoutineTracker AI예요.\n지금은 🧘 명상 · 💧 물 마시기 · 📖 독서 · 🌙 수면, 4개 습관을 함께 관리하고 있어요.\n\n하고 싶은 걸 편하게 말해주세요. 제가 루틴을 설계해서 보여드리고, **버튼을 누르면 앱 전체에 반영**할게요.',tag:'샘플 기록이 들어 있는 데모'}];
+  return s;
+}
+
+return {QA,matchQA,fixTypos,customDb,customKey,guessIcon,buildCreate,HABIT_DB,WEEK,DAY_KO,DIFF_KO,REASONS,BUCKETS,STEPS,DEFAULT_SUGGEST,understand,classify,MockAI,AIEngine,ActionHandler,computeAnalytics,
+  makeDemoState,makeEmptyState,fmtTime,fmtDays,josa,ymd,addDays,dayOf,bucketOf,curDur,routinesOf};
+})();
+if(typeof module!=='undefined')module.exports=RT;
+/*CORE-END*/
+</script>
+<script>
+/* =====================================================================
+   UI layer — reads the central state, renders every tab, never decides.
+   ===================================================================== */
+(function(){
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const REDUCED=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const KEY='routinetracker.demo.v1';
+const TABS=['ai','today','routines','analytics','dna'];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=s=>esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>');
+const wait=ms=>new Promise(r=>setTimeout(r,REDUCED?0:ms));
+
+let state=load()||RT.makeDemoState();
+let current='ai',busy=false;
+const pending={today:new Set(),routines:new Set(),analytics:new Set(),dna:new Set()};
+const badge=new Set();
+const prev=new Map();
+
+function load(){try{const raw=localStorage.getItem(KEY);if(!raw)return null;const s=JSON.parse(raw);if(!s||s.v!==1||!Array.isArray(s.habits))return null;
+  const keep={lastReport:s.analytics&&s.analytics.lastReport,weeklyReport:s.analytics&&s.analytics.weeklyReport};s.analytics=Object.assign(RT.computeAnalytics(s),keep);s.meta=s.meta||{nudged:{}};return s;}catch(e){return null;}}
+let saveWarned=false;
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));saveWarned=false;}catch(e){
+  if(!saveWarned){saveWarned=true;setTimeout(()=>toast('기기 저장 공간이 부족해서 기록이 저장되지 않았어요. 백업한 뒤 AI 대화 내역을 지워주세요.',null,6000),0);}}}
+const habitById=id=>state.habits.find(h=>h.id===id);
+
+/* ---------- apply pipeline (shared by chat, buttons and tab controls) ---------- */
+const STRUCT=new Set(['UPDATE_HABIT','CREATE_HABIT','ADD_ROUTINE','MODIFY_ROUTINE','DELETE_HABIT','CHANGE_TIME','CHANGE_DURATION','LOWER_DIFFICULTY','INCREASE_DIFFICULTY','SET_GOAL']);
+function applyActions(actions){
+  const snap=actions.some(a=>STRUCT.has(a.type))?JSON.parse(JSON.stringify({habits:state.habits,routines:state.routines,experiments:state.experiments,user:state.user})):null;
+  const changes=RT.ActionHandler.apply(state,actions);
+  if(snap){const real=changes.filter(c=>!c.error&&(c.tab==='today'||c.tab==='routines'));if(real.length)state.meta.undo={at:Date.now(),label:real[0].text,more:real.length-1,data:snap};}
+  if(changes.length){
+    changes.forEach(c=>{if(c.tab&&pending[c.tab]){pending[c.tab].add(c.id||'*');if(c.tab!==current)badge.add(c.tab);}});
+    ['analytics','dna'].forEach(t=>{if(t!==current)badge.add(t);});
+    const tb=$('#tabbar');tb.classList.remove('sync');void tb.offsetWidth;tb.classList.add('sync');
+  }
+  save();renderAll();updateBadges();
+  setTimeout(()=>{if(pending[current])pending[current].clear();},300);
+  return changes;
+}
+
+/* ---------- tabs ---------- */
+function showTab(tab){
+  if(!TABS.includes(tab))return;const from=TABS.indexOf(current),to=TABS.indexOf(tab);
+  $$('.screen').forEach(sc=>{const i=TABS.indexOf(sc.dataset.tab);sc.classList.toggle('active',sc.dataset.tab===tab);sc.classList.toggle('left',i<to);});
+  $$('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  current=tab;badge.delete(tab);
+  if(tab!=='ai'){render(tab,true);setTimeout(()=>pending[tab]&&pending[tab].clear(),300);}
+  else scrollChat();
+  updateBadges();
+  if(tab==='dna')startHelix();
+}
+function updateBadges(){$$('.tab').forEach(b=>b.classList.toggle('badge',badge.has(b.dataset.tab)));}
+function renderAll(){['today','routines','analytics','dna'].forEach(t=>render(t,false));}
+function render(tab,entering){
+  const el=$('#'+tab);const fns={today:renderToday,routines:renderRoutines,analytics:renderAnalytics,dna:renderDNA};
+  el.innerHTML=fns[tab]();
+  if(entering){el.classList.remove('enter');void el.offsetWidth;el.classList.add('enter');}
+  if(tab===current)animateIn(el);
+  if(tab==='dna')setupHelix();
+}
+const fl=(tab,id)=>pending[tab]&&pending[tab].has(id)?' flash':'';
+
+/* count-ups, rings and bars animate from their previous value */
+function animateIn(root){
+  $$('[data-count]',root).forEach(el=>{const k=el.dataset.key,to=+el.dataset.count,suf=el.dataset.suffix||'';const from=k&&prev.has(k)?prev.get(k):0;if(k)prev.set(k,to);
+    if(REDUCED||from===to){el.textContent=to+suf;return;}const t0=performance.now(),D=750;
+    const step=n=>{const p=Math.min(1,(n-t0)/D);el.textContent=Math.round(from+(to-from)*(1-Math.pow(1-p,3)))+suf;if(p<1)requestAnimationFrame(step);};el.textContent=from+suf;requestAnimationFrame(step);});
+  $$('[data-anim]',root).forEach(el=>{const k=el.dataset.key,prop=el.dataset.anim,to=el.dataset.to;const from=k&&prev.has(k)?prev.get(k):el.dataset.from;if(k)prev.set(k,to);
+    /* bars: set the final size once, then animate only transform (GPU, no layout work per frame) */
+    if(prop==='width'||prop==='height'){
+      const f=parseFloat(from)||0,t=parseFloat(to)||0;el.style[prop]=to;
+      if(REDUCED||t<=0||f===t)return;
+      const r=Math.min(f/t,4),ax=prop==='width'?'X':'Y';
+      el.style.transition='none';el.style.transform=`scale${ax}(${r})`;
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{el.style.transition='';el.style.transform='none';}));
+      return;
+    }
+    el.style[prop]=from;requestAnimationFrame(()=>requestAnimationFrame(()=>{el.style[prop]=to;}));});
+}
+
+/* ---------- TODAY ---------- */
+function todayItems(){
+  const T=RT.ymd(new Date()),dk=RT.dayOf(T);
+  return state.routines.filter(r=>r.days.includes(dk)).sort((a,b)=>a.time.localeCompare(b.time))
+    .map(r=>({r,h:habitById(r.habitId),log:state.routineLogs.find(l=>l.routineId===r.id&&l.date===T)})).filter(x=>x.h);
+}
+function renderToday(){
+  const now=new Date();const items=todayItems();const done=items.filter(x=>x.log&&x.log.status==='done').length;const tot=items.length;
+  const pct=tot?Math.round(done/tot*100):0;const C=2*Math.PI*44;const A=state.analytics;
+  const next=items.find(x=>!x.log);
+  let brief;
+  if(!tot)brief='오늘은 예정된 루틴이 없어요. AI에게 새 습관을 말해보세요.';
+  else if(!next)brief='오늘 루틴을 모두 마쳤어요. 내일도 같은 시간에 만나요.';
+  else{const tr=A.topReason;brief=`다음 루틴은 <b>${RT.fmtTime(next.r.time)} ${esc(next.r.title)}</b>예요.`+(tr&&tr.key==='tired'?' 최근 피로로 놓친 날이 많아서, 오늘은 절반만 해도 성공으로 칠게요.':tr&&tr.key==='forgot'?' 깜빡하기 쉬운 시간이라 바로 앞 행동에 붙여보세요.':' 시작 2분만 넘기면 끝까지 가기 쉬워요.');}
+  const runningExp=state.experiments.find(x=>x.status==='running');
+  return `
+  <div><div class="eyebrow">${now.getMonth()+1}월 ${now.getDate()}일 ${'일월화수목금토'[now.getDay()]}요일</div><h1 class="h1">오늘의 루틴</h1></div>
+  <div class="card hero${fl('today','goal')}">
+    <div class="ring"><svg viewBox="0 0 104 104"><circle class="bgc" cx="52" cy="52" r="44"/><circle class="fgc" cx="52" cy="52" r="44" stroke-dasharray="${C.toFixed(1)}" data-anim="strokeDashoffset" data-key="ring" data-from="${C.toFixed(1)}" data-to="${(C*(1-pct/100)).toFixed(1)}" style="stroke-dashoffset:${(C*(1-pct/100)).toFixed(1)}"/></svg>
+      <div class="lbl"><div><b data-count="${pct}" data-suffix="%" data-key="todaypct">${pct}%</b><span>${done}/${tot} 완료</span></div></div></div>
+    <div class="meta">
+      <div class="btnrow"><span class="pill accent">🔥 연속 ${A.streak}일</span><span class="pill">이번 주 ${A.week.rate??0}%</span></div>
+      <div class="goal">현재 목표<br><b>${esc(state.user.goal||'목표를 AI에게 말해주세요')}</b></div>
+    </div>
+  </div>
+  <div class="card brief"><div class="orb sm pulse"></div><div><div class="eyebrow" style="margin-bottom:2px">AI 코치 브리핑</div><p>${brief}</p>${runningExp?`<p class="muted" style="margin-top:6px;font-size:13px">🧪 진행 중인 실험: ${esc(runningExp.title)}</p>`:''}</div></div>
+  ${tot?`<div class="rlist">${items.map(({r,h,log})=>`
+    <div class="ritem${log?' '+log.status:''}${fl('today',r.id)}" data-rid="${r.id}">
+      <div class="hic" style="background:${h.color}22">${h.icon}</div>
+      <div class="info"><b>${esc(r.title)}</b><span>${RT.fmtTime(r.time)} · ${esc(h.name)}${log&&log.status==='fail'&&log.reason?` · ${esc((RT.REASONS[log.reason]||{label:'기타'}).label)}`:''}</span></div>
+      ${log?`<button class="status ${log.status}" data-act="undo" data-log="${log.id}" aria-label="기록 취소">${log.status==='done'?'✓ 완료':'✕ 못함'}</button>`
+        :`<div class="ract"><button class="rb no" data-act="fail" data-rid="${r.id}" aria-label="못 했어요">✕</button><button class="rb ok" data-act="done" data-rid="${r.id}" aria-label="완료">✓</button></div>`}
+    </div>`).join('')}</div>`
+  :`<div class="card empty"><div class="orb"></div><p>아직 오늘 루틴이 없어요.<br>AI에게 "운동 습관 만들어줘"라고 말해보세요.</p><div class="btnrow" style="justify-content:center"><button class="btn primary" data-act="ask" data-fill="🏃 운동 습관 만들어줘">AI에게 요청하기</button><button class="btn" data-act="addform">＋ 직접 추가</button></div></div>`}`;
+}
+
+/* ---------- ROUTINES ---------- */
+function renderRoutines(){
+  const T=RT.ymd(new Date()),dk=RT.dayOf(T);
+  const head=sub=>`<div class="tabhead"><div><div class="eyebrow">${sub}</div><h1 class="h1">루틴</h1></div><button class="btn primary sm" data-act="addform">＋ 직접 추가</button></div>`;
+  if(!state.habits.length)return head('전체 습관')+`<div class="card empty"><div class="orb"></div><p>아직 습관이 없어요.<br>직접 추가하거나 AI에게 말해보세요.</p><div class="btnrow" style="justify-content:center"><button class="btn primary" data-act="addform">＋ 직접 추가</button><button class="btn" data-act="ask" data-fill="🌅 아침 루틴 만들어줘">AI에게 요청하기</button></div></div>`;
+  return head(`전체 습관 ${state.habits.length}개 · 루틴 ${state.routines.length}개`)+
+  state.habits.map(h=>{const rs=RT.routinesOf(state,h);const days=rs[0]?rs[0].days:[];
+    const age=Math.max(0,Math.round((new Date(T)-new Date(h.createdAt))/864e5));const curDay=Math.min(7,age+1);const fresh=pending.routines.has(h.id);
+    return `<div class="card hcard${fl('routines',h.id)}">
+      <div class="hhead"><div class="hic" style="background:${h.color}22">${h.icon}</div><div class="info"><div style="display:flex;gap:8px;align-items:center"><b>${esc(h.name)}</b>${fresh?'<span class="newtag">AI</span>':''}</div><div class="sub">${esc(h.goal||'')}</div></div><span class="pill">${RT.DIFF_KO[h.difficulty]||''}</span></div>
+      <div class="week">${RT.WEEK.map(d=>`<div class="wd${days.includes(d)?' on':''}${d===dk?' today':''}" style="${days.includes(d)?`background:${h.color}`:''}">${RT.DAY_KO[d]}</div>`).join('')}</div>
+      <div>${rs.map(r=>`<div class="rline"><span class="tm">${r.time}</span><span class="tt">${esc(r.title)}</span>${r.duration?`<span class="pill">${r.duration}분</span>`:''}</div>`).join('')}</div>
+      ${h.plan&&h.plan.length?`<div><div class="eyebrow" style="margin-bottom:6px">${age>=7?'7일 플랜 완주 · 유지 단계':`7일 플랜 · ${curDay}일째`}</div><div class="plan">${h.plan.map(p=>`<div class="pl${age<7&&p.day===curDay?' cur':''}${age<7&&p.day<curDay?' past':''}"><small>DAY ${p.day}</small><p>${esc(p.title)}</p></div>`).join('')}</div></div>`:''}
+      <div class="hact"><button class="btn" data-act="editform" data-hid="${h.id}">✏️ 수정</button><button class="btn" data-act="delask" data-hid="${h.id}">🗑 삭제</button><button class="linkbtn" data-act="ask" data-fill="${esc(h.name)} 루틴을 조정하고 싶어">AI에게 요청 →</button></div>
+    </div>`;}).join('');
+}
+
+/* ---------- CALENDAR HEATMAP ---------- */
+const cal={offset:0,habit:'all',sel:null};
+function dayStats(date,hid){
+  const T=RT.ymd(new Date());const logs=state.routineLogs.filter(l=>l.date===date&&(hid==='all'||l.habitId===hid));
+  const sched=date>T?0:state.routines.filter(r=>{const h=state.habits.find(x=>x.id===r.habitId);return h&&(hid==='all'||h.id===hid)&&h.createdAt<=date&&r.days.includes(RT.dayOf(date));}).length;
+  return {logs,done:logs.filter(l=>l.status==='done').length,total:Math.max(logs.length,sched)};
+}
+function calendarHTML(){
+  const now=new Date();const base=new Date(now.getFullYear(),now.getMonth()+cal.offset,1);const y=base.getFullYear(),m=base.getMonth();
+  const nd=new Date(y,m+1,0).getDate();const lead=(base.getDay()+6)%7;const T=RT.ymd(now);
+  let cells='',sumDone=0,perfect=0;
+  for(let i=0;i<lead;i++)cells+='<div class="cell blank"></div>';
+  for(let d=1;d<=nd;d++){const ds=RT.ymd(new Date(y,m,d));const st=dayStats(ds,cal.habit);sumDone+=st.done;
+    let cls='';if(ds>T)cls='fut';else if(!st.total)cls='';else if(!st.done)cls='miss';else{const r=st.done/st.total;cls=r>=1?'l4':r>=.67?'l3':r>=.34?'l2':'l1';if(r>=1)perfect++;}
+    cells+=`<button class="cell ${cls}${ds===T?' today':''}${cal.sel===ds?' sel':''}" data-act="calday" data-date="${ds}" aria-label="${m+1}월 ${d}일 ${st.done}/${st.total}">${d}</button>`;}
+  let detail='';
+  if(cal.sel){const st=dayStats(cal.sel,cal.habit);const [,mm,dd]=cal.sel.split('-');
+    detail=`<div class="dayd"><b>${+mm}월 ${+dd}일 · ${st.done}/${st.total} 완료</b>${st.logs.length?st.logs.sort((a,b)=>(a.time||'').localeCompare(b.time||'')).map(l=>{const h=habitById(l.habitId);return `<div style="display:flex;gap:8px;align-items:center"><span class="pill ${l.status==='done'?'ok':'bad'}">${l.status==='done'?'✓':'✕'}</span><span style="flex:1;min-width:0">${h?h.icon:'•'} ${esc(l.title)}</span><span class="muted mono">${l.time||''}</span></div>`;}).join(''):'<span class="muted">기록이 없어요.</span>'}</div>`;}
+  return `<div class="card"><div class="card-title"><div class="h2">📅 달력</div><div class="calnav"><button data-act="calnav" data-dir="-1" aria-label="이전 달">‹</button><b style="font-size:14px;min-width:84px;text-align:center">${y}년 ${m+1}월</b><button data-act="calnav" data-dir="1" aria-label="다음 달"${cal.offset>=0?' disabled style="opacity:.35"':''}>›</button></div></div>
+    <div class="calfil"><button class="${cal.habit==='all'?'on':''}" data-act="calhabit" data-hid="all">전체</button>${state.habits.map(h=>`<button class="${cal.habit===h.id?'on':''}" data-act="calhabit" data-hid="${h.id}">${h.icon} ${esc(h.name)}</button>`).join('')}</div>
+    <div class="cal">${['월','화','수','목','금','토','일'].map(x=>`<div class="dh">${x}</div>`).join('')}${cells}</div>
+    <div class="legend2"><span>못 함</span><i style="border:1.5px dashed var(--bad);box-sizing:border-box"></i><span style="margin-left:4px">적음</span><i class="cell l1" style="padding:0"></i><i class="cell l2" style="padding:0"></i><i class="cell l3" style="padding:0"></i><i class="cell l4" style="padding:0"></i><span>많음</span><span style="margin-left:auto">완료 ${sumDone}회 · 완벽한 날 ${perfect}일</span></div>${detail}</div>`;
+}
+
+/* ---------- ANALYTICS ---------- */
+function renderAnalytics(){
+  const A=state.analytics;if(!A.total)return `<div><div class="eyebrow">실행 패턴</div><h1 class="h1">분석</h1></div><div class="card empty"><div class="orb"></div><p>실행 기록이 쌓이면 성공률과 실패 원인을 분석해드려요.</p></div>`;
+  const bump=state.meta.reasonBump&&Date.now()-state.meta.reasonBump.at<15000?state.meta.reasonBump.reason:null;
+  const reasons=Object.entries(A.reasons).sort((a,b)=>b[1]-a[1]);const maxR=reasons.length?reasons[0][1]:1;
+  const lr=A.lastReport,wr=A.weeklyReport;
+  const dayCols=RT.WEEK.map(d=>({d,v:A.byDay[d]}));const hard=A.hardestDay&&A.hardestDay.day;
+  let bestD=null;dayCols.forEach(x=>{if(x.v&&(!bestD||x.v.rate>bestD.v.rate))bestD=x;});
+  return `
+  <div><div class="eyebrow">최근 ${A.total}개 실행 기록 기준</div><h1 class="h1">분석</h1></div>
+  ${calendarHTML()}
+  <div class="kpis${fl('analytics','kpi')}">
+    <div class="kpi"><div class="k">전체 성공률</div><div class="v"><span data-count="${A.rate}" data-key="k-rate">${A.rate}</span><small>%</small></div></div>
+    <div class="kpi"><div class="k">연속 실행</div><div class="v"><span data-count="${A.streak}" data-key="k-streak">${A.streak}</span><small>일</small></div></div>
+    <div class="kpi"><div class="k">최근 7일</div><div class="v"><span data-count="${A.week.done}" data-key="k-week">${A.week.done}</span><small>/${A.week.total}</small></div></div>
+  </div>
+  ${lr?`<div class="card report${fl('analytics','report')}"><div class="card-title"><div class="h2">🧠 AI 분석 리포트</div><span class="pill accent">${timeAgo(lr.createdAt)}</span></div>
+    <ul>${lr.bestHour!=null?`<li>⏰ 가장 성공률이 높은 시간 · <b>${RT.fmtTime(String(lr.bestHour).padStart(2,'0')+':00')}</b></li>`:''}${lr.hardestDay?`<li>📅 가장 어려운 요일 · <b>${RT.DAY_KO[lr.hardestDay]}요일</b></li>`:''}${lr.topReason?`<li>⚠️ 가장 많은 실패 원인 · <b>${esc(lr.topReason.label)}</b> (${lr.topReason.count}회)</li>`:''}</ul>
+    <div class="insight">💡 ${esc(lr.insight)}</div></div>`
+  :`<div class="card brief"><div class="orb sm pulse"></div><div style="flex:1"><p>AI에게 분석을 요청하면 패턴과 개선 방법을 리포트로 정리해드려요.</p><button class="linkbtn" data-act="ask" data-fill="📊 내 습관 분석해줘">내 습관 분석해줘 →</button></div></div>`}
+  ${wr?`<div class="card${fl('analytics','weekly')}"><div class="card-title"><div class="h2">🗓 주간 리포트</div><span class="pill">${timeAgo(wr.createdAt)}</span></div><div class="statgrid"><div class="stat"><div class="k">완료</div><div class="v">${wr.week.done}<small>/${wr.week.total}</small></div></div><div class="stat"><div class="k">성공률</div><div class="v">${wr.week.rate}<small>%</small></div></div></div></div>`:''}
+  <div class="card"><div class="card-title"><div class="h2">습관별 성공률</div></div><div class="bars">
+    ${A.byHabit.map(b=>`<div class="bar${fl('analytics',b.habitId)}"><span class="nm">${b.icon} ${esc(b.name)}</span><div class="track"><div class="fill" style="background:${b.color};width:${b.rate||0}%" data-anim="width" data-key="hb-${b.habitId}" data-from="0%" data-to="${b.rate||0}%"></div></div><span class="val">${b.total?b.rate+'%':'신규'}</span></div>`).join('')}
+  </div></div>
+  <div class="card"><div class="card-title"><div class="h2">실패 원인</div><span class="pill bad">총 ${reasons.reduce((a,b)=>a+b[1],0)}회</span></div>
+    ${reasons.length?`<div class="bars">${reasons.map(([k,v])=>`<div class="bar${fl('analytics','reason-'+k)}"><span class="nm">${esc((RT.REASONS[k]||{label:'기타'}).label)}${bump===k?'<span class="plus">+1</span>':''}</span><div class="track"><div class="fill" style="background:var(--bad);width:${Math.round(v/maxR*100)}%" data-anim="width" data-key="rs-${k}" data-from="0%" data-to="${Math.round(v/maxR*100)}%"></div></div><span class="val">${v}회</span></div>`).join('')}</div>`:'<p class="muted" style="margin:0">아직 실패 기록이 없어요.</p>'}
+  </div>
+  <div class="card"><div class="card-title"><div class="h2">실행 시간대</div>${A.bestBucket?`<span class="pill ok">${A.bestBucket.name} ${A.bestBucket.rate}%</span>`:''}</div>
+    <div class="cols c4">${RT.BUCKETS.map(b=>{const v=A.byBucket[b];const r=v?v.rate:0;return `<div class="col${A.bestBucket&&A.bestBucket.name===b?' hi':''}"><span class="cv">${v?r+'%':'-'}</span><div class="cb" style="height:${r}%" data-anim="height" data-key="bk-${b}" data-from="0%" data-to="${r}%"></div><span class="cl">${b}<small>${{아침:'5–11시',낮:'11–17시',저녁:'17–21시',밤:'21–5시'}[b]}</small></span></div>`;}).join('')}</div></div>
+  <div class="card"><div class="card-title"><div class="h2">요일별 패턴</div>${hard?`<span class="pill bad">${RT.DAY_KO[hard]}요일 취약</span>`:''}</div>
+    <div class="cols">${dayCols.map(({d,v})=>{const r=v?v.rate:0;return `<div class="col${d===hard?' lo':''}${bestD&&bestD.d===d?' hi':''}"><span class="cv">${v?r:'-'}</span><div class="cb" style="height:${r}%" data-anim="height" data-key="dy-${d}" data-from="0%" data-to="${r}%"></div><span class="cl">${RT.DAY_KO[d]}</span></div>`;}).join('')}</div></div>`;
+}
+function timeAgo(t){const m=Math.round((Date.now()-t)/6e4);return m<1?'방금':m<60?`${m}분 전`:m<1440?`${Math.round(m/60)}시간 전`:`${Math.round(m/1440)}일 전`;}
+
+/* ---------- DNA ---------- */
+function dnaProfile(){
+  const A=state.analytics;const b=A.bestBucket&&A.bestBucket.name;
+  const persona={아침:'아침형 스타터',낮:'틈새 실행가',저녁:'저녁형 실행가',밤:'밤형 몰입가'}[b]||'탐색 중인 설계자';
+  const sub={tired:'에너지 관리가 성패를 가르는 타입',forgot:'시작 신호가 필요한 타입',busy:'짧고 유연한 루틴이 맞는 타입',motivation:'작은 시작이 중요한 타입',social:'일정 변화에 민감한 타입'}[A.topReason&&A.topReason.key]||'데이터를 모으는 중';
+  const burden=A.topReason?Math.round(((A.reasons.tired||0)+(A.reasons.burden||0))/Math.max(1,Object.values(A.reasons).reduce((a,c)=>a+c,0))*100):0;
+  const morning=A.byBucket['아침']?A.byBucket['아침'].rate:0;
+  const intensity=A.avgDuration!=null?Math.min(100,Math.round(A.avgDuration/45*100)):0;
+  return {persona,sub,traits:[['꾸준함',A.consistency,'최근 14일 중 실행한 날'],['회복력',A.recovery??0,'실패 다음 기록이 성공인 비율'],['아침 친화도',morning,'아침 시간대 성공률'],['부담 민감도',burden,'피로·부담으로 인한 실패 비중'],['루틴 강도',intensity,'평균 루틴 길이 기준']]};
+}
+function renderDNA(){
+  const A=state.analytics;const P=dnaProfile();
+  const notes=[];
+  if(A.bestHour)notes.push(`⏰ ${RT.fmtTime(String(A.bestHour.hour).padStart(2,'0')+':00')}에 시작한 루틴의 성공률이 ${A.bestHour.rate}%로 가장 높아요.`);
+  if(A.hardestDay)notes.push(`📅 ${RT.DAY_KO[A.hardestDay.day]}요일 성공률은 ${A.hardestDay.rate}%예요. 주말 직전 피로가 쌓이는 패턴이 보여요.`);
+  if(A.topReason)notes.push(`⚠️ 실패의 ${Math.round(A.topReason.count/Math.max(1,Object.values(A.reasons).reduce((a,c)=>a+c,0))*100)}%가 '${A.topReason.label}' 때문이에요.`);
+  const weak=A.byHabit.filter(x=>x.total>=3).sort((a,b)=>a.rate-b.rate)[0];if(weak)notes.push(`🎯 가장 개선 여지가 큰 습관은 ${weak.icon} ${weak.name}(${weak.rate}%)이에요.`);
+  const fresh=A.byHabit.filter(x=>x.total===0);fresh.forEach(x=>notes.push(`🌱 ${x.icon} ${x.name}: 새로 추가된 습관이라 첫 기록부터 DNA에 반영할게요.`));
+  return `
+  <div><div class="eyebrow">습관 DNA</div><h1 class="h1">나의 실행 패턴</h1></div>
+  <div class="card dna-hero${fl('dna','persona')}"><canvas id="helix" aria-label="습관별 최근 14일 실행 기록 나선"></canvas>
+    <div class="cap"><div class="eyebrow">AI가 파악한 유형</div><div class="persona">${P.persona}</div><div class="muted">${P.sub}</div>
+      <div class="legend" style="margin-top:8px">${state.habits.map(h=>`<span><i style="background:${h.color}"></i>${esc(h.name)}</span>`).join('')}<span>● 성공 ○ 실패</span></div></div></div>
+  <div class="card"><div class="card-title"><div class="h2">실행 특성</div></div><div class="traits">
+    ${P.traits.map(([n,v,d],i)=>`<div class="trait"><div class="row"><b>${n}</b><span class="num"><span data-count="${v}" data-key="tr-${i}">${v}</span></span></div><div class="track"><div class="fill" style="background:linear-gradient(90deg,var(--accent),var(--accent-2));width:${v}%" data-anim="width" data-key="trw-${i}" data-from="0%" data-to="${v}%"></div></div><div class="muted" style="font-size:12px;margin-top:3px">${d}</div></div>`).join('')}
+  </div></div>
+  <div class="card"><div class="card-title"><div class="h2">🧠 AI 노트</div></div><ul class="notes">${notes.map(n=>`<li>${esc(n)}</li>`).join('')||'<li class="muted">기록이 쌓이면 패턴을 정리해드릴게요.</li>'}</ul></div>
+  <div class="card"><div class="card-title"><div class="h2">🧪 AI 실험</div><span class="pill">진행 ${state.experiments.filter(x=>x.status!=='done').length} · 완료 ${state.experiments.filter(x=>x.status==='done').length}</span></div>
+    ${state.experiments.length?state.experiments.map(x=>{if(x.status==='done'){const r=x.result||{};const dl=r.before!=null&&r.after!=null?r.after-r.before:null;
+      return `<div class="exp${fl('dna',x.id)}"><div style="display:flex;justify-content:space-between;gap:8px"><b style="font-size:14px">${esc(x.title)}</b><span class="pill ${dl==null?'':dl>=0?'ok':'bad'}">${dl==null?'완료':`${r.before}% → ${r.after}%`}</span></div><div class="muted" style="font-size:12.5px">가설: ${esc(x.hypothesis||'')}</div></div>`;}
+      const d=Math.min(x.length,Math.max(1,Math.round((new Date(RT.ymd(new Date()))-new Date(x.startDate))/864e5)+1));return `<div class="exp${fl('dna',x.id)}"><div style="display:flex;justify-content:space-between;gap:8px"><b style="font-size:14px">${esc(x.title)}</b><span class="pill accent">${d}/${x.length}일</span></div><div class="muted" style="font-size:12.5px">가설: ${esc(x.hypothesis||'')}</div><div class="track"><div class="fill" style="background:var(--accent);width:${Math.round(d/x.length*100)}%"></div></div></div>`;}).join('')
+    :'<p class="muted" style="margin:0;font-size:14px">AI가 루틴을 조정하면 7일 실험이 여기에 기록돼요.</p>'}</div>`;
+}
+let helixRAF=0,helixPhase=0;
+function setupHelix(){const c=$('#helix');if(!c)return;drawHelix();}
+function startHelix(){cancelAnimationFrame(helixRAF);if(REDUCED){drawHelix();return;}const loop=()=>{if(current!=='dna')return;helixPhase+=.012;drawHelix();helixRAF=requestAnimationFrame(loop);};loop();}
+function drawHelix(){
+  const c=$('#helix');if(!c)return;const dpr=window.devicePixelRatio||1;const w=c.clientWidth,h=c.clientHeight;if(!w)return;
+  if(c.width!==Math.round(w*dpr)){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);}
+  const g=c.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);
+  const cs=getComputedStyle(document.documentElement);const line=cs.getPropertyValue('--line').trim()||'#ccc';const bg=cs.getPropertyValue('--surface').trim()||'#fff';
+  const N=14,pad=22,step=(w-pad*2)/(N-1),mid=h/2,amp=h*.3;const now=new Date();
+  const hs=state.habits;const days=[...Array(N)].map((_,i)=>RT.ymd(RT.addDays(now,i-(N-1))));
+  for(let i=0;i<N;i++){const x=pad+i*step,a=i*.55+helixPhase;const y1=mid+Math.sin(a)*amp,y2=mid-Math.sin(a)*amp;
+    g.strokeStyle=line;g.lineWidth=1.5;g.beginPath();g.moveTo(x,y1);g.lineTo(x,y2);g.stroke();
+    hs.forEach((hb,j)=>{const t=hs.length>1?j/(hs.length-1):.5;const y=y1+(y2-y1)*t;const logs=state.routineLogs.filter(l=>l.habitId===hb.id&&l.date===days[i]);if(!logs.length)return;
+      const ok=logs.some(l=>l.status==='done');const depth=(Math.cos(a)+1)/2;const r=2.6+depth*2.2;
+      g.beginPath();g.arc(x,y,r,0,Math.PI*2);if(ok){g.fillStyle=hb.color;g.globalAlpha=.55+depth*.45;g.fill();}else{g.fillStyle=bg;g.fill();g.strokeStyle=hb.color;g.globalAlpha=.8;g.lineWidth=1.5;g.stroke();}g.globalAlpha=1;});}
+  ['--accent','--accent-2'].forEach((v,k)=>{g.strokeStyle=cs.getPropertyValue(v).trim();g.lineWidth=2.5;g.beginPath();for(let x=pad;x<=w-pad+.5;x+=3){const a=((x-pad)/step)*.55+helixPhase;const y=mid+(k?-1:1)*Math.sin(a)*amp;x===pad?g.moveTo(x,y):g.lineTo(x,y);}g.stroke();});
+}
+window.addEventListener('resize',()=>{if(current==='dna')drawHelix();});
+
+/* ---------- CHAT ---------- */
+const chat=$('#chat'),input=$('#input'),sendBtn=$('#sendBtn');
+function scrollChat(smooth){chat.scrollTo({top:chat.scrollHeight,behavior:smooth&&!REDUCED?'smooth':'auto'});}
+function setChips(list){$('#chips').innerHTML=(list&&list.length?list:RT.DEFAULT_SUGGEST).map(t=>`<button class="chip" data-act="chip" data-fill="${esc(t)}">${esc(t)}</button>`).join('');}
+function fillInput(t){input.value=t.replace(/^[^\w가-힣]+\s*/u,'').trim();autoGrow();sendBtn.disabled=!input.value.trim();if(current!=='ai')showTab('ai');input.focus();}
+function autoGrow(){input.style.height='auto';input.style.height=Math.min(120,input.scrollHeight)+'px';}
+
+function userEl(text,anim){const d=document.createElement('div');d.className='msg user'+(anim?'':' static');d.innerHTML=`<div class="bubble">${esc(text)}</div>`;return d;}
+function cardsHTML(m){
+  let html='';
+  (m.cardsData||[]).forEach(cd=>{
+    if(cd.type==='plan'&&cd.plan){html+=`<div class="mini"><h4>${cd.icon} ${esc(cd.name)} · 7일 루틴 ${cd.preview?'<span class="pill accent">미리보기</span>':''}<span class="pill" style="margin-left:auto">${RT.DIFF_KO[cd.difficulty]||''}</span></h4><div class="plan-days">${cd.plan.map((p,i)=>`<div class="pday" style="animation-delay:${.06*i}s"><b>D${p.day}</b><span>${esc(p.title.replace(/ \+.*/,''))}</span></div>`).join('')}</div>
+      <div style="margin-top:8px">${cd.routines.map(r=>`<div class="rline"><span class="tm">${r.time}</span><span class="tt">${esc(r.title)}</span><span class="pill">${RT.fmtDays(r.days)}</span></div>`).join('')}</div></div>`;}
+    if(cd.type==='report'&&cd.report){const r=cd.report;html+=`<div class="mini"><h4>📊 분석 요약</h4><div class="statgrid">
+      <div class="stat"><div class="k">전체 성공률</div><div class="v"><span data-count="${r.overall}">${r.overall}</span><small>%</small></div></div>
+      <div class="stat"><div class="k">연속 실행</div><div class="v"><span data-count="${r.streak}">${r.streak}</span><small>일</small></div></div>
+      ${r.habits.filter(x=>x.total>=3).slice(0,4).map(x=>`<div class="stat"><div class="k">${x.icon} ${esc(x.name)}</div><div class="v"><span data-count="${x.rate}">${x.rate}</span><small>%</small></div></div>`).join('')}</div></div>`;}
+    if(cd.type==='weekly'&&cd.report){const r=cd.report;html+=`<div class="mini"><h4>🗓 최근 7일</h4><div class="statgrid"><div class="stat"><div class="k">완료</div><div class="v"><span data-count="${r.week.done}">${r.week.done}</span><small>/${r.week.total}</small></div></div><div class="stat"><div class="k">성공률</div><div class="v"><span data-count="${r.week.rate}">${r.week.rate}</span><small>%</small></div></div></div></div>`;}
+  });
+  const ch=(m.changes||[]).filter(c=>!c.error);
+  if(ch.length){const tabs=[...new Set(ch.map(c=>c.tab).filter(Boolean))];const nm={today:'오늘',routines:'루틴',analytics:'분석',dna:'DNA'};const sym={add:'+',update:'↻',remove:'−',log:'•'};
+    html+=`<div class="mini changes"><h4>⚡ 앱에 반영된 변경 ${ch.length}건</h4><ul>${ch.map((c,i)=>`<li style="animation-delay:${.07*i}s"><span class="chg-ic ${c.kind}">${sym[c.kind]||'•'}</span><span>${esc(c.text)}</span></li>`).join('')}</ul>
+      <div class="jump">${tabs.map(t=>`<button data-act="tab" data-tab="${t}">${nm[t]} 탭에서 보기 →</button>`).join('')}</div></div>`;}
+  if(m.buttons&&m.buttons.length){html+=`<div class="${m.options?'optlist':'btnrow'}">${m.buttons.map((b,i)=>`<button class="btn${b.primary?' primary':''}${b.danger?' danger':''}" data-act="mbtn" data-mid="${m.id}" data-bi="${i}"${m.used&&(b.actions||b.after)?' disabled':''}>${esc(b.label)}</button>`).join('')}</div>`;}
+  if(m.understanding){html+=`<details class="nlu"><summary>◇ AI 해석 · ${m.understanding.intent} · 신뢰도 ${m.understanding.confidence}%</summary><pre>${esc(JSON.stringify({understanding:m.understanding,actions:(m.actions||[]).map(a=>a.type==='CREATE_HABIT'?{type:a.type,habit:{name:a.habit.name,category:a.habit.category,difficulty:a.habit.difficulty}}:a)},null,2))}</pre></details>`;}
+  return html;
+}
+function aiEl(m,anim){
+  const d=document.createElement('div');d.className='msg ai'+(anim?'':' static');d.dataset.mid=m.id;
+  d.innerHTML=`<div class="orb sm"></div><div class="body">${m.tag?`<span class="tagline">${esc(m.tag)}</span>`:''}<div class="bubble">${fmt(m.text)}</div><div class="extras">${anim?'':cardsHTML(m)}</div></div>`;
+  return d;
+}
+function sysEl(text){const d=document.createElement('div');d.className='msg sys';d.innerHTML=`<div class="bubble">${esc(text)}</div>`;return d;}
+function renderChat(){chat.innerHTML='';state.aiMessages.forEach(m=>chat.appendChild(m.role==='user'?userEl(m.text):m.role==='sys'?sysEl(m.text):aiEl(m,false)));const last=[...state.aiMessages].reverse().find(m=>m.role==='ai');setChips(last&&last.suggestions);scrollChat();}
+
+async function typeInto(el,m){
+  const bubble=$('.bubble',el);const plain=m.text.replace(/\*\*/g,'');
+  if(!REDUCED){bubble.textContent='';const n=plain.length;const per=Math.max(6,Math.min(16,900/n));for(let i=0;i<n;i+=2){bubble.textContent=plain.slice(0,i+2);if(i%12===0)scrollChat();await new Promise(r=>setTimeout(r,per));}}
+  bubble.innerHTML=fmt(m.text);
+  const ex=$('.extras',el);ex.innerHTML=cardsHTML(m);animateIn(ex);scrollChat(true);
+}
+async function thinking(steps){
+  const d=document.createElement('div');d.className='msg ai thinking';d.innerHTML=`<div class="orb sm live"></div><div class="body"><div class="steps"></div></div>`;chat.appendChild(d);scrollChat(true);
+  const box=$('.steps',d);$('#headOrb').classList.add('live');
+  for(let i=0;i<steps.length;i++){
+    $$('.step',box).forEach(s=>{s.classList.remove('cur');const ic=s.querySelector('.ck');if(ic)ic.textContent='✓';});
+    const s=document.createElement('div');s.className='step cur';s.innerHTML=`<span class="ck"></span><span class="shimmer">${esc(steps[i])}</span>`;box.appendChild(s);scrollChat(true);
+    await wait(i===steps.length-1?420:620);
+  }
+  return d;
+}
+function snapCards(cards){return (cards||[]).map(c=>{
+  if(c.type==='plan'&&c.plan)return c;
+  if(c.type==='plan'){const h=state.habits.find(x=>x.key===c.habitKey);if(!h)return c;return {type:'plan',name:h.name,icon:h.icon,difficulty:h.difficulty,plan:h.plan,routines:RT.routinesOf(state,h).map(r=>({time:r.time,title:r.title,days:r.days}))};}
+  if(c.type==='report')return {type:'report',report:state.analytics.lastReport};
+  if(c.type==='weekly')return {type:'weekly',report:state.analytics.weeklyReport};
+  return c;});}
+let mid=0;const newId=()=>'m'+Date.now().toString(36)+(mid++);
+
+async function postAI(m,{steps,animate=true}={}){
+  let th=null;if(steps&&steps.length&&animate)th=await thinking(steps);
+  const el=aiEl(m,animate);if(th)th.replaceWith(el);else chat.appendChild(el);$('#headOrb').classList.remove('live');
+  state.aiMessages.push(m);if(state.aiMessages.length>120)state.aiMessages.splice(1,state.aiMessages.length-120);save();
+  if(animate)await typeInto(el,m);scrollChat(true);
+  setChips(m.suggestions);
+  if(current!=='ai'){badge.add('ai');updateBadges();}
+}
+
+async function send(text){
+  text=text.trim();if(!text||busy)return;busy=true;sendBtn.disabled=true;input.value='';autoGrow();
+  const um={id:newId(),role:'user',text,at:Date.now()};state.aiMessages.push(um);chat.appendChild(userEl(text,true));scrollChat(true);
+  try{
+    const res=await RT.AIEngine.generateResponse(text,state);
+    const pend=state.meta.pending;const pm=pend&&state.aiMessages.find(x=>x.id===pend.msgId);
+    if(res.ui.accept&&pm&&!pm.used){const b=pm.buttons.find(x=>x.primary&&x.actions)||pm.buttons.find(x=>x.actions);
+      if(b){await runButton(pm,b,{noBubble:true});busy=false;sendBtn.disabled=!input.value.trim();return;}}
+    if(pm&&!pm.used&&(res.ui.deny||res.pending))markUsed(pm);
+    const steps=res.ui.steps&&res.ui.steps.length?res.ui.steps:RT.STEPS.chat;
+    const th=await thinking(steps);
+    const changes=res.actions.length?applyActions(res.actions):[];
+    const m={id:newId(),role:'ai',at:Date.now(),text:res.message,changes,buttons:res.ui.buttons||null,options:!!res.ui.options,suggestions:res.ui.suggestions||null,understanding:res.understanding,actions:res.actions.length?res.actions:(res.proposedActions||[]),cardsData:snapCards(res.ui.cards)};
+    const el=aiEl(m,true);th.replaceWith(el);$('#headOrb').classList.remove('live');
+    if(res.pending)state.meta.pending=Object.assign({msgId:m.id},res.pending);
+    state.aiMessages.push(m);save();await typeInto(el,m);setChips(m.suggestions);
+    if(changes.length&&res.ui.focus)toast(`AI가 앱을 업데이트했어요`,{label:'보기',fn:()=>showTab(res.ui.focus)});
+    await checkProactive();
+  }catch(err){console.error(err);await postAI({id:newId(),role:'ai',text:'요청을 처리하는 중에 문제가 생겼어요. 표현을 조금 바꿔서 다시 말해주세요.'},{animate:false});}
+  busy=false;sendBtn.disabled=!input.value.trim();
+}
+async function checkProactive(){
+  const p=RT.AIEngine.proactive(state);if(!p)return;
+  RT.ActionHandler.apply(state,p.preActions||[]);save();await wait(500);
+  const old=state.meta.pending&&state.aiMessages.find(x=>x.id===state.meta.pending.msgId);if(old&&!old.used)markUsed(old);
+  const pmsg={id:newId(),role:'ai',at:Date.now(),text:p.message,tag:p.tag,buttons:p.buttons,suggestions:null};
+  state.meta.pending={msgId:pmsg.id,intent:'NUDGE'};state.meta.lastWhy='최근 연속으로 놓친 기록이 쌓이면 루틴이 지금 컨디션보다 무겁다는 신호예요. 강도를 낮추면 다시 이어가기 쉬워지고, 7일 뒤에 결과를 보고 다시 올릴 수 있어요.';
+  await postAI(pmsg,{steps:['🔍 실행 패턴 감지 중...'],animate:current==='ai'});
+  if(current!=='ai')toast('AI 코치가 루틴 조정을 제안했어요',{label:'확인',fn:()=>showTab('ai')});
+}
+function markUsed(m){
+  m.used=true;if(state.meta.pending&&state.meta.pending.msgId===m.id)state.meta.pending=null;
+  const el=chat.querySelector(`[data-mid="${m.id}"]`);if(el)$$('.btn',el).forEach((x,i)=>{const bb=m.buttons&&m.buttons[+x.dataset.bi];if(!bb||bb.actions||bb.after)x.disabled=true;});save();
+}
+async function runButton(m,b,opt={}){
+  if(b.fill){fillInput(b.fill);return;}
+  if(m.used)return;markUsed(m);
+  if(!opt.noBubble){chat.appendChild(userEl(b.label,true));state.aiMessages.push({id:newId(),role:'user',text:b.label,at:Date.now()});}
+  let changes=[];if(b.actions&&b.actions.length){const th=await thinking(RT.STEPS.modify);changes=applyActions(b.actions);th.remove();}
+  const a=b.after||{message:'좋아요.'};
+  await postAI({id:newId(),role:'ai',at:Date.now(),text:a.message,changes,cardsData:snapCards(a.cards),actions:b.actions||[],suggestions:a.suggestions||null},{animate:true});
+  if(changes.length&&a.focus)toast('AI가 앱을 업데이트했어요',{label:'보기',fn:()=>showTab(a.focus)});
+  await checkProactive();
+}
+
+/* ---------- tab controls go through the same Action pipeline ---------- */
+function burst(x,y,color){if(REDUCED)return;const cols=[color,'var(--accent)','var(--accent-2)','var(--ok)'];for(let i=0;i<16;i++){const p=document.createElement('i');p.className='burst';const ang=Math.random()*Math.PI*2,dist=40+Math.random()*50;
+  p.style.cssText=`left:${x}px;top:${y}px;background:${cols[i%4]};--dx:${Math.cos(ang)*dist}px;--dy:${Math.sin(ang)*dist-20}px;--rot:${Math.random()*360}deg`;document.body.appendChild(p);setTimeout(()=>p.remove(),850);}}
+function completeFromTab(rid,btn){
+  const r=state.routines.find(x=>x.id===rid);const h=habitById(r.habitId);const rect=btn.getBoundingClientRect();
+  applyActions([{type:'COMPLETE_ROUTINE',routineId:rid,date:RT.ymd(new Date())}]);
+  burst(rect.left+rect.width/2,rect.top+rect.height/2,h.color);
+  const row=$(`#today [data-rid="${rid}"]`);if(row)row.classList.add('justdone');
+  const A=state.analytics;if(A.today.done===A.today.total&&A.today.total)toast('🎉 오늘 루틴을 모두 완료했어요!');
+}
+function openFailSheet(rid){
+  const r=state.routines.find(x=>x.id===rid);const h=habitById(r.habitId);
+  $('#sheetBody').innerHTML=`<div class="grab"></div><div><div class="eyebrow">${h.icon} ${esc(r.title)}</div><div class="h2" style="margin-top:2px">어떤 이유로 못 했나요?</div><p class="muted" style="margin:4px 0 0;font-size:13px">원인을 기록하면 AI가 루틴 조정에 활용해요.</p></div>
+    <div class="reasons">${[['tired','😮‍💨 피곤했어요'],['busy','⏳ 시간이 없었어요'],['forgot','💭 깜빡했어요'],['motivation','😶 하기 싫었어요'],['sick','🤒 몸이 안 좋았어요'],['burden','🏋️ 너무 부담됐어요']].map(([k,l])=>`<button class="btn" data-act="reason" data-rid="${rid}" data-reason="${k}">${l}</button>`).join('')}</div>
+    <button class="btn ghost" data-act="closesheet">취소</button>`;
+  $('#sheet').hidden=false;
+}
+async function failFromTab(rid,reason){
+  $('#sheet').hidden=true;const r=state.routines.find(x=>x.id===rid);const h=habitById(r.habitId);
+  applyActions([{type:'FAIL_ROUTINE',routineId:rid,date:RT.ymd(new Date()),reason}]);
+  const lbl=RT.REASONS[reason].label;
+  state.aiMessages.push({id:newId(),role:'sys',text:`오늘 탭 · ${h.name} 실패 기록 (원인: ${lbl})`,at:Date.now()});chat.appendChild(sysEl(`오늘 탭 · ${h.name} 실패 기록 (원인: ${lbl})`));save();
+  toast(`실패 원인 '${lbl}' 기록 · 분석에 반영됐어요`,{label:'분석',fn:()=>showTab('analytics')});
+  await checkProactive();
+}
+
+let toastTimer=0;
+function toast(text,action,ms){const t=$('#toast');t.innerHTML=`<span>${esc(text)}</span>${action?`<button>${esc(action.label)}</button>`:''}`;t.hidden=false;
+  if(action)t.querySelector('button').onclick=()=>{t.hidden=true;action.fn();};
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.hidden=true;},ms||3600);}
+
+const FORM_ICONS=['✨','🎸','✍️','🎨','🍳','🧹','💊','💻','💰','🙏','🪴','📷','🏃','📖','💧','🧘'];
+let iconTouched=false;
+function openAddForm(){
+  iconTouched=false;
+  $('#sheetBody').innerHTML=`<div class="grab"></div><div><div class="h2">습관 직접 추가</div><p class="muted" style="margin:4px 0 0;font-size:13px">목록에 없는 습관도 만들 수 있어요. 7일 플랜은 자동으로 만들어져요.</p></div>
+  <form class="form" id="addForm" novalidate>
+    <label class="fl" for="f-name">이름<input id="f-name" maxlength="14" placeholder="예: 기타 연습, 일기 쓰기" autocomplete="off"></label>
+    <div class="fl">아이콘<div class="icons">${FORM_ICONS.map((ic,i)=>`<button type="button" class="ico${i===0?' on':''}" data-ico="${ic}" aria-label="아이콘 ${ic}">${ic}</button>`).join('')}</div></div>
+    <div class="row2"><label class="fl" for="f-time">시작 시간<input id="f-time" type="time" value="20:00"></label><label class="fl" for="f-dur">하루 몇 분<input id="f-dur" type="number" min="1" max="240" value="10" inputmode="numeric"></label></div>
+    <div class="fl">요일<div class="days">${RT.WEEK.map(d=>`<button type="button" class="dy on" data-day="${d}">${RT.DAY_KO[d]}</button>`).join('')}</div></div>
+    <p class="ferr" id="f-err" hidden></p>
+    <button class="btn primary" type="submit">추가하기</button><button class="btn ghost" type="button" data-act="closesheet">취소</button>
+  </form>`;
+  $('#sheet').hidden=false;setTimeout(()=>$('#f-name')&&$('#f-name').focus(),250);
+}
+function submitAddForm(){
+  const name=$('#f-name').value.trim().replace(/\s+/g,' ');const err=$('#f-err');
+  const icon=($('.ico.on')||{}).dataset?.ico||'✨';const time=$('#f-time').value||'20:00';const dur=Math.round(+$('#f-dur').value);
+  const days=$$('.dy.on').map(b=>b.dataset.day);
+  const fail=m=>{err.textContent=m;err.hidden=false;};
+  if(name.length<1)return fail('습관 이름을 입력해주세요.');
+  if(!(dur>=1&&dur<=240))return fail('하루 시간은 1~240분 사이로 입력해주세요.');
+  if(!days.length)return fail('요일을 하나 이상 골라주세요.');
+  if(state.habits.some(h=>h.name===name))return fail(`'${name}' 습관이 이미 있어요. 수정은 AI에게 말해주세요.`);
+  const level=dur<=10?'beginner':dur<=20?'intermediate':'advanced';
+  const builtin=Object.values(RT.HABIT_DB).find(d=>d.name===name&&d.unit==='min');
+  const B=builtin?RT.buildCreate(builtin.key,{difficulty:level,duration:dur,time,days}):RT.buildCreate(RT.customKey(name),{db:RT.customDb(name,{icon}),difficulty:level,duration:dur,time,days});
+  if(!builtin)B.habit.icon=icon;
+  applyActions(B.actions);
+  $('#sheet').hidden=true;
+  const note=`루틴 탭 · ${B.habit.icon} ${name} 직접 추가 (${RT.fmtDays(days)} ${RT.fmtTime(time)}, ${dur}분)`;
+  state.aiMessages.push({id:newId(),role:'sys',text:note,at:Date.now()});chat.appendChild(sysEl(note));save();
+  toast(`${B.habit.icon} ${name} 습관을 추가했어요`,{label:'오늘 보기',fn:()=>showTab('today')});
+}
+function openEditForm(hid){
+  const h=habitById(hid);if(!h)return;const rs=RT.routinesOf(state,h);const r0=rs[0]||{time:'20:00',days:RT.WEEK.slice(),duration:null};
+  const builtin=!!RT.HABIT_DB[h.key];const durOk=h.unit==='min'&&r0.duration;const icons=FORM_ICONS.includes(h.icon)?FORM_ICONS:[h.icon].concat(FORM_ICONS.slice(0,15));
+  $('#sheetBody').innerHTML=`<div class="grab"></div><div><div class="h2">${h.icon} ${esc(h.name)} 수정</div><p class="muted" style="margin:4px 0 0;font-size:13px">${rs.length>1?`루틴 ${rs.length}개가 함께 옮겨져요.`:'저장하면 오늘·루틴·분석 탭에 바로 반영돼요.'}</p></div>
+  <form class="form" id="editForm" data-hid="${h.id}" novalidate>
+    <label class="fl" for="f-name">이름<input id="f-name" maxlength="14" value="${esc(h.name)}"${builtin?' disabled':''} autocomplete="off"></label>${builtin?'<p class="muted" style="margin:-8px 0 0;font-size:12px">기본 습관은 이름을 바꿀 수 없어요.</p>':''}
+    <div class="fl">아이콘<div class="icons">${icons.map(ic=>`<button type="button" class="ico${ic===h.icon?' on':''}" data-ico="${ic}" aria-label="아이콘 ${ic}">${ic}</button>`).join('')}</div></div>
+    <div class="row2"><label class="fl" for="f-time">${rs.length>1?'첫 루틴 시간':'시작 시간'}<input id="f-time" type="time" value="${r0.time}"></label>${durOk?`<label class="fl" for="f-dur">하루 몇 분<input id="f-dur" type="number" min="1" max="240" value="${r0.duration}" inputmode="numeric"></label>`:'<div></div>'}</div>
+    <div class="fl">요일<div class="days">${RT.WEEK.map(d=>`<button type="button" class="dy${r0.days.includes(d)?' on':''}" data-day="${d}">${RT.DAY_KO[d]}</button>`).join('')}</div></div>
+    <p class="ferr" id="f-err" hidden></p>
+    <button class="btn primary" type="submit">저장하기</button><button class="btn ghost" type="button" data-act="closesheet">취소</button>
+  </form>`;
+  iconTouched=true;$('#sheet').hidden=false;
+}
+function submitEditForm(form){
+  const h=habitById(form.dataset.hid);if(!h)return;const rs=RT.routinesOf(state,h);const r0=rs[0];const err=$('#f-err');const fail=m=>{err.textContent=m;err.hidden=false;};
+  const name=$('#f-name').value.trim().replace(/\s+/g,' ');const icon=($('.ico.on')||{dataset:{}}).dataset.ico||h.icon;const time=$('#f-time').value;
+  const durEl=$('#f-dur');const dur=durEl?Math.round(+durEl.value):null;const days=$$('.dy.on').map(b=>b.dataset.day);
+  if(!name)return fail('습관 이름을 입력해주세요.');
+  if(name!==h.name&&state.habits.some(x=>x!==h&&x.name===name))return fail(`'${name}' 습관이 이미 있어요.`);
+  if(durEl&&!(dur>=1&&dur<=240))return fail('하루 시간은 1~240분 사이로 입력해주세요.');
+  if(!days.length)return fail('요일을 하나 이상 골라주세요.');
+  if(!time)return fail('시간을 입력해주세요.');
+  const acts=[];const ch={};if(name!==h.name)ch.name=name;if(icon!==h.icon)ch.icon=icon;
+  if(Object.keys(ch).length)acts.push({type:'UPDATE_HABIT',habitRef:h.id,changes:ch});
+  if(r0&&time!==r0.time)acts.push({type:'CHANGE_TIME',habitRef:h.id,time});
+  if(durEl&&r0&&dur!==r0.duration)acts.push({type:'CHANGE_DURATION',habitRef:h.id,duration:dur});
+  if(r0&&days.join()!==r0.days.join())acts.push({type:'MODIFY_ROUTINE',habitRef:h.id,changes:{days}});
+  $('#sheet').hidden=true;
+  if(!acts.length){toast('바뀐 내용이 없어요');return;}
+  applyActions(acts);
+  sysNote(`루틴 탭 · ${icon} ${name} 직접 수정`);
+  toast(`${icon} ${name} 수정했어요`,{label:'되돌리기',fn:undoDirect});
+}
+function openDeleteConfirm(hid){
+  const h=habitById(hid);if(!h)return;const n=RT.routinesOf(state,h).length;const logs=state.routineLogs.filter(l=>l.habitId===h.id).length;
+  $('#sheetBody').innerHTML=`<div class="grab"></div><div class="h2">${h.icon} ${esc(h.name)} 삭제할까요?</div><p class="muted" style="margin:0;font-size:14px">루틴 ${n}개가 함께 사라져요. 지난 실행 기록 ${logs}개는 전체 통계를 위해 남겨둬요.<br>삭제 직후에는 되돌릴 수 있어요.</p>
+    <button class="btn danger" data-act="dodelete" data-hid="${h.id}">삭제하기</button><button class="btn ghost" data-act="closesheet">취소</button>`;
+  $('#sheet').hidden=false;
+}
+function doDelete(hid){
+  const h=habitById(hid);if(!h)return;const nm=`${h.icon} ${h.name}`;$('#sheet').hidden=true;
+  applyActions([{type:'DELETE_HABIT',habitRef:h.id}]);if(cal.habit===hid)cal.habit='all';renderAll();
+  sysNote(`루틴 탭 · ${nm} 삭제`);toast(`${nm} 삭제했어요`,{label:'되돌리기',fn:undoDirect});
+}
+function undoDirect(){if(!state.meta.undo){toast('되돌릴 변경이 없어요');return;}const lb=state.meta.undo.label;applyActions([{type:'RESTORE'}]);sysNote(`되돌리기 · ${lb}`);toast('되돌렸어요');}
+function sysNote(t){state.aiMessages.push({id:newId(),role:'sys',text:t,at:Date.now()});chat.appendChild(sysEl(t));save();}
+function openClearChat(){
+  $('#sheetBody').innerHTML=`<div class="grab"></div><div class="h2">AI 대화 내역을 지울까요?</div><p class="muted" style="margin:0;font-size:14px">채팅 기록만 지워져요. 습관, 루틴, 실행 기록, 분석은 그대로 남아요.</p>
+    <button class="btn danger" data-act="doclearchat">대화 내역 지우기</button><button class="btn ghost" data-act="closesheet">취소</button>`;
+  $('#sheet').hidden=false;
+}
+function doClearChat(){
+  state.aiMessages=[{id:newId(),role:'ai',at:Date.now(),text:V2(['대화 내역을 지웠어요. 습관과 기록은 그대로 있어요.\n무엇을 도와드릴까요?','깨끗하게 정리했어요. 루틴과 기록은 그대로예요.\n새로 이야기해볼까요?'])}];
+  state.meta.pending=null;state.meta.lastWhy=null;state.meta.lastGreetDate=null;
+  $('#sheet').hidden=true;save();renderChat();badge.delete('ai');updateBadges();showTab('ai');toast('AI 대화 내역을 지웠어요');
+  setTimeout(maybeGreet,900);
+}
+const V2=a=>a[Math.floor(Math.random()*a.length)];
+async function maybeGreet(){
+  if(busy)return;const g=RT.AIEngine.greet(state);save();if(!g)return;
+  if(g.preActions&&g.preActions.length)applyActions(g.preActions);
+  const old=state.meta.pending&&state.aiMessages.find(x=>x.id===state.meta.pending.msgId);if(old&&!old.used&&g.buttons)markUsed(old);
+  const gm={id:newId(),role:'ai',at:Date.now(),text:g.message,tag:g.tag,buttons:g.buttons||null,suggestions:g.suggestions||null};
+  if(g.buttons&&g.buttons.some(b=>b.actions))state.meta.pending={msgId:gm.id,intent:'GREET'};
+  if(g.why)state.meta.lastWhy=g.why;
+  busy=true;await postAI(gm,{steps:['🔍 어제 기록 살펴보는 중...','🧠 오늘 브리핑 준비 중...'],animate:current==='ai'});busy=false;
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(maybeGreet,600);});
+function openReset(){
+  const n=state.habits.length,m=state.routineLogs.length;
+  $('#sheetBody').innerHTML=`<div class="grab"></div><div><div class="h2">데이터 관리</div><p class="muted" style="margin:4px 0 0;font-size:13px">기록은 이 브라우저에만 저장돼요 (습관 ${n}개 · 기록 ${m}개). 백업해두면 다른 기기로 옮길 수 있어요.</p></div>
+    ${canOfferInstall()?'<button class="btn" data-act="install">📲 홈 화면에 앱 설치</button><div class="sep"></div>':''}
+    <button class="btn primary" data-act="export">백업 파일 저장</button>
+    <button class="btn" data-act="copybackup">백업 코드 복사</button>
+    <label class="btn" for="f-import" style="cursor:pointer">백업 파일 불러오기</label><input type="file" id="f-import" accept=".json,application/json,text/plain" hidden>
+    <button class="btn" data-act="pasteform">백업 코드 붙여넣기</button>
+    <div class="sep"></div>
+    <button class="btn" data-act="clearchat">💬 AI 대화 내역만 지우기</button>
+    <p class="muted" style="margin:0;font-size:12.5px">파일 저장이 안 되는 화면에서는 '백업 코드 복사'를 메모장 등에 붙여넣어 보관하세요.</p>
+    <div class="sep"></div>
+    <button class="btn" data-act="reset" data-mode="demo">샘플 기록으로 다시 시작</button><button class="btn" data-act="reset" data-mode="empty">빈 상태로 시작</button><button class="btn ghost" data-act="closesheet">닫기</button>`;
+  $('#sheet').hidden=false;
+}
+function backupText(){return JSON.stringify({app:'RoutineTracker',version:1,exportedAt:new Date().toISOString(),state},null,0);}
+async function exportFile(){
+  const txt=backupText();const name=`routinetracker-backup-${RT.ymd(new Date())}.json`;
+  /* iPhone: a download link inside a home-screen app opens a dead-end preview, so use the share sheet ("파일에 저장") */
+  if(IS_IOS&&navigator.canShare&&typeof File==='function'){
+    try{const file=new File([txt],name,{type:'application/json'});
+      if(navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'RoutineTracker 백업'});$('#sheet').hidden=true;toast('공유 메뉴에서 "파일에 저장"을 고르면 백업이 보관돼요.',null,5000);return;}
+    }catch(e){if(e&&e.name==='AbortError')return;}
+  }
+  try{const blob=new Blob([txt],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);
+    toast('백업 파일을 저장했어요. 저장이 안 됐다면 백업 코드 복사를 써주세요.');}catch(e){copyBackup();}
+}
+function copyBackup(){
+  const txt=backupText();
+  const show=()=>{$('#sheetBody').innerHTML=`<div class="grab"></div><div class="h2">백업 코드</div><p class="muted" style="margin:0;font-size:13px">아래 내용을 전부 선택해 복사한 뒤 메모장 등에 보관하세요.</p><textarea id="f-backup" readonly>${esc(txt)}</textarea><button class="btn ghost" data-act="closesheet">닫기</button>`;$('#sheet').hidden=false;const ta=$('#f-backup');ta.focus();ta.select();};
+  try{navigator.clipboard.writeText(txt).then(()=>{toast('백업 코드를 복사했어요. 메모장 등에 붙여넣어 보관하세요.');$('#sheet').hidden=true;},show);}catch(e){show();}
+}
+function openPasteForm(){
+  $('#sheetBody').innerHTML=`<div class="grab"></div><div class="h2">백업 코드 붙여넣기</div><label class="fl" for="f-paste">백업 코드<textarea id="f-paste" placeholder="복사해둔 백업 코드를 붙여넣으세요"></textarea></label><p class="ferr" id="f-err" hidden></p><button class="btn primary" data-act="pasteimport">불러오기</button><button class="btn ghost" data-act="closesheet">취소</button>`;
+  $('#sheet').hidden=false;
+}
+let pendingImport=null;
+function parseBackup(text){
+  let o;try{o=JSON.parse(text);}catch(e){return {error:'백업 내용을 읽을 수 없어요. 코드 전체를 빠짐없이 붙여넣었는지 확인해주세요.'};}
+  const st=o&&o.state?o.state:o;
+  if(!st||st.v!==1||!Array.isArray(st.habits)||!Array.isArray(st.routines)||!Array.isArray(st.routineLogs))return {error:'RoutineTracker 백업 형식이 아니에요.'};
+  return {state:st};
+}
+function confirmImport(text){
+  const r=parseBackup(text);
+  if(r.error){const err=$('#f-err');if(err){err.textContent=r.error;err.hidden=false;}else{toast(r.error);}return;}
+  pendingImport=r.state;
+  $('#sheetBody').innerHTML=`<div class="grab"></div><div class="h2">백업을 불러올까요?</div><p class="muted" style="margin:0;font-size:14px">백업: 습관 ${r.state.habits.length}개 · 기록 ${r.state.routineLogs.length}개<br>지금 데이터(습관 ${state.habits.length}개 · 기록 ${state.routineLogs.length}개)는 백업 내용으로 바뀌어요.</p><button class="btn primary" data-act="doimport">불러오기</button><button class="btn ghost" data-act="closesheet">취소</button>`;
+  $('#sheet').hidden=false;
+}
+function doImport(){
+  if(!pendingImport)return;const st=pendingImport;pendingImport=null;
+  const base=RT.makeEmptyState();
+  state=Object.assign(base,st,{user:Object.assign(base.user,st.user||{}),meta:Object.assign(base.meta,st.meta||{}),failureReasons:st.failureReasons||[],experiments:st.experiments||[],aiMessages:Array.isArray(st.aiMessages)?st.aiMessages:[]});
+  const keep={lastReport:st.analytics&&st.analytics.lastReport,weeklyReport:st.analytics&&st.analytics.weeklyReport};state.analytics=Object.assign(RT.computeAnalytics(state),keep);
+  state.aiMessages.push({id:newId(),role:'sys',text:`백업을 불러왔어요 · 습관 ${state.habits.length}개 · 기록 ${state.routineLogs.length}개`,at:Date.now()});
+  Object.values(pending).forEach(x=>x.clear());badge.clear();prev.clear();
+  $('#sheet').hidden=true;save();renderAll();renderChat();updateBadges();showTab('routines');
+  toast('백업을 불러왔어요');
+}
+function reset(mode){
+  state=mode==='empty'?Object.assign(RT.makeEmptyState(),{aiMessages:[{id:'welcome',role:'ai',at:Date.now(),text:'안녕하세요, RoutineTracker AI예요.\n아직 등록된 습관이 없어요. 만들고 싶은 습관을 편하게 말해주세요.\n예: "요즘 운동을 시작하고 싶은데 계속 미루게 돼"'}]}):RT.makeDemoState();
+  if(mode==='empty')state.analytics=RT.computeAnalytics(state);
+  Object.values(pending).forEach(s=>s.clear());badge.clear();prev.clear();
+  $('#sheet').hidden=true;save();renderAll();renderChat();updateBadges();showTab('ai');
+  setTimeout(maybeGreet,900);
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{
+  const ic=e.target.closest('.ico');if(ic){$$('.ico').forEach(x=>x.classList.toggle('on',x===ic));iconTouched=true;return;}
+  const dy=e.target.closest('.dy');if(dy){dy.classList.toggle('on');return;}
+  const b=e.target.closest('[data-act],.tab');if(!b)return;
+  if(b.classList.contains('tab')){showTab(b.dataset.tab);return;}
+  const act=b.dataset.act;
+  if(act==='chip'||act==='ask')fillInput(b.dataset.fill);
+  else if(act==='tab')showTab(b.dataset.tab);
+  else if(act==='done')completeFromTab(b.dataset.rid,b);
+  else if(act==='fail')openFailSheet(b.dataset.rid);
+  else if(act==='reason')failFromTab(b.dataset.rid,b.dataset.reason);
+  else if(act==='undo')applyActions([{type:'UNDO_LOG',logId:b.dataset.log}]);
+  else if(act==='closesheet')$('#sheet').hidden=true;
+  else if(act==='reset')reset(b.dataset.mode);
+  else if(act==='addform')openAddForm();
+  else if(act==='export')exportFile();
+  else if(act==='copybackup')copyBackup();
+  else if(act==='pasteform')openPasteForm();
+  else if(act==='pasteimport')confirmImport($('#f-paste').value);
+  else if(act==='doimport')doImport();
+  else if(act==='editform')openEditForm(b.dataset.hid);
+  else if(act==='delask')openDeleteConfirm(b.dataset.hid);
+  else if(act==='dodelete')doDelete(b.dataset.hid);
+  else if(act==='clearchat')openClearChat();
+  else if(act==='doclearchat')doClearChat();
+  else if(act==='calnav'){cal.offset=Math.min(0,cal.offset+(+b.dataset.dir));cal.sel=null;render('analytics',false);}
+  else if(act==='calhabit'){cal.habit=b.dataset.hid;render('analytics',false);}
+  else if(act==='calday'){cal.sel=cal.sel===b.dataset.date?null:b.dataset.date;render('analytics',false);}
+  else if(act==='mbtn'){const m=state.aiMessages.find(x=>x.id===b.dataset.mid);if(m&&m.buttons)runButton(m,m.buttons[+b.dataset.bi]);}
+});
+$('#sheet').addEventListener('click',e=>{if(e.target.id==='sheet')$('#sheet').hidden=true;});
+$('#resetBtn').addEventListener('click',openReset);
+document.addEventListener('submit',e=>{if(e.target.id==='addForm'){e.preventDefault();submitAddForm();}else if(e.target.id==='editForm'){e.preventDefault();submitEditForm(e.target);}});
+document.addEventListener('input',e=>{if(e.target.id==='f-name'&&!iconTouched){const ic=RT.guessIcon(e.target.value);$$('.ico').forEach(x=>x.classList.toggle('on',x.dataset.ico===ic));}});
+document.addEventListener('change',e=>{if(e.target.id==='f-import'&&e.target.files[0]){const fr=new FileReader();fr.onload=()=>confirmImport(String(fr.result));fr.readAsText(e.target.files[0]);e.target.value='';}});
+input.addEventListener('input',()=>{autoGrow();sendBtn.disabled=busy||!input.value.trim();});
+input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){if(e.isComposing||e.keyCode===229)return;e.preventDefault();send(input.value);}});
+sendBtn.addEventListener('click',()=>send(input.value));
+
+renderAll();renderChat();updateBadges();
+/* =====================================================================
+   Mobile & PWA layer
+   - visible-viewport sizing (iOS Safari address bar, on-screen keyboard)
+   - install button (Android prompt / iPhone instructions)
+   - service worker registration + "new version" prompt
+   ===================================================================== */
+const UA=navigator.userAgent||'';
+const IS_IOS=/iP(hone|ad|od)/.test(UA)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const IS_SAMSUNG=/SamsungBrowser/i.test(UA);
+const isStandalone=()=>(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;
+const IS_WEB=/^https?:$/.test(location.protocol);
+
+/* --- 1. keep the app exactly inside the visible area, and lift the composer above the keyboard --- */
+(function(){
+  const app=$('#app'),root=document.documentElement,vv=window.visualViewport;let raf=0,baseH=0;
+  const isField=el=>!!el&&(el.tagName==='TEXTAREA'||(el.tagName==='INPUT'&&!/^(button|checkbox|radio|file|submit|range|color)$/i.test(el.type)));
+  function fit(){
+    raf=0;
+    const h=Math.round(vv?vv.height:window.innerHeight);
+    const top=vv?Math.max(0,Math.round(vv.offsetTop)):0;
+    const typing=isField(document.activeElement);
+    if(!typing||!baseH)baseH=Math.max(baseH,h);
+    root.style.setProperty('--app-h',h+'px');
+    app.style.top=top?top+'px':'';
+    app.classList.add('vv');
+    const kb=typing&&baseH-h>120;
+    if(kb!==document.body.classList.contains('kb-open')){
+      document.body.classList.toggle('kb-open',kb);
+      if(kb&&document.activeElement===input)scrollChat();
+    }
+    if(kb){const el=document.activeElement;if(el.closest('.sheet'))el.scrollIntoView({block:'center'});}
+  }
+  const req=()=>{if(!raf)raf=requestAnimationFrame(fit);};
+  if(vv){vv.addEventListener('resize',req);vv.addEventListener('scroll',req);}
+  window.addEventListener('resize',req);
+  window.addEventListener('orientationchange',()=>{baseH=0;setTimeout(req,250);setTimeout(req,600);});
+  /* belt and braces for browsers without overflow:clip (Safari < 16): undo any sideways scroll */
+  const unshift=()=>{if(app.scrollLeft)app.scrollLeft=0;const sc=$('.screens');if(sc&&sc.scrollLeft)sc.scrollLeft=0;};
+  document.addEventListener('focusin',e=>{if(isField(e.target)){unshift();setTimeout(()=>{unshift();req();},60);setTimeout(req,400);}});
+  document.addEventListener('focusout',()=>setTimeout(()=>{req();if(!isField(document.activeElement)&&(window.scrollY||document.documentElement.scrollTop))window.scrollTo(0,0);},150));
+  /* iOS only fires :active styles when a touch listener exists */
+  document.addEventListener('touchstart',()=>{},{passive:true});
+  fit();
+})();
+
+/* --- 2. install --- */
+let deferredInstall=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;});
+window.addEventListener('appinstalled',()=>{deferredInstall=null;toast('홈 화면에 RoutineTracker를 추가했어요');});
+function canOfferInstall(){return IS_WEB&&!isStandalone();}
+function installApp(){
+  if(deferredInstall){const p=deferredInstall;deferredInstall=null;$('#sheet').hidden=true;p.prompt();p.userChoice&&p.userChoice.then(c=>{if(c&&c.outcome==='accepted')toast('설치를 시작했어요');}).catch(()=>{});return;}
+  const steps=IS_IOS
+    ?['Safari 아래쪽의 <b>공유 버튼</b>(네모에 위쪽 화살표)을 눌러요.','목록을 올려서 <b>홈 화면에 추가</b>를 눌러요.','오른쪽 위 <b>추가</b>를 누르면 끝이에요.','<span class="muted">Chrome 등 다른 앱에서 열었다면 Safari로 열어주세요.</span>']
+    :IS_SAMSUNG
+    ?['오른쪽 아래 <b>메뉴(≡)</b>를 눌러요.','<b>현재 페이지 추가</b> → <b>홈 화면</b>을 눌러요.']
+    :['오른쪽 위 <b>메뉴(⋮)</b>를 눌러요.','<b>앱 설치</b> 또는 <b>홈 화면에 추가</b>를 눌러요.'];
+  $('#sheetBody').innerHTML=`<div class="grab"></div><div class="h2">📲 홈 화면에 앱 설치</div><p class="muted" style="margin:0;font-size:13.5px">설치하면 주소창 없이 앱처럼 열리고, 인터넷이 없어도 열려요.</p>
+    <ol class="steps-list">${steps.map(s=>`<li>${s}</li>`).join('')}</ol>
+    ${IS_IOS?'<p class="muted" style="margin:0;font-size:12.5px">홈 화면 앱은 Safari와 저장 공간이 따로예요. Safari에서 쓰던 기록은 백업 후 앱에서 불러오세요.</p>':''}
+    <button class="btn ghost" data-act="closesheet">닫기</button>`;
+  $('#sheet').hidden=false;
+}
+document.addEventListener('click',e=>{if(e.target.closest('[data-act="install"]'))installApp();});
+if(isStandalone()&&navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+
+/* --- 3. service worker (only on http/https; a double-clicked local file just works without it) --- */
+if(IS_WEB&&'serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./service-worker.js').then(reg=>{
+      const ask=w=>toast('새 버전이 준비됐어요',{label:'업데이트',fn:()=>w.postMessage({type:'SKIP_WAITING'})},12000);
+      if(reg.waiting&&navigator.serviceWorker.controller)ask(reg.waiting);
+      reg.addEventListener('updatefound',()=>{const w=reg.installing;if(w)w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller)ask(w);});});
+      document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')reg.update().catch(()=>{});});
+    }).catch(()=>{});
+    /* reload only when an update replaces a running version, never on the very first install */
+    const hadController=!!navigator.serviceWorker.controller;let reloading=false;
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!hadController||reloading)return;reloading=true;location.reload();});
+  });
+}
+
+setTimeout(maybeGreet,700);
+})();
+</script>
+</body>
+</html>
